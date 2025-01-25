@@ -1,3 +1,57 @@
+test_data = [
+    {
+        "name": "serie_with_one_stamp",
+        "year": "",
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            }
+        ]
+    },
+    {
+        "name": "serie_that_fits_in_6.5",
+        "year": "",
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 2
+            }
+        ]
+    },
+    {
+        "name": "serie_that_does_not_fit_in_6.5",
+        "year": "",
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 2
+            },
+            {
+                "height": 1.5,
+                "width": 2
+            }
+        ]
+    }
+]
+
+
 # Finds the container for the stamps in the series that has the minimum height and width. Prioritizes finding the minimum height first.
 # Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
 def get_series_container(series, max_width, stamp_padding=0.4):
@@ -10,7 +64,7 @@ def get_series_container(series, max_width, stamp_padding=0.4):
     starting_height = 0
     last_width = 0
     
-    for stamp in series:
+    for stamp in series["stamps"]:
         # The effective height and width of the stamp is what the stamp needs plus padding on each direction. 
         height = stamp["height"] + 2 * stamp_padding
         width = stamp["width"] + 2 * stamp_padding
@@ -42,3 +96,5 @@ def get_series_container(series, max_width, stamp_padding=0.4):
             series_container["height"] = y2
         
     return series_container
+
+print(get_series_container(test_data[2], 6.5))
