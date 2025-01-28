@@ -1,4 +1,4 @@
-#import math  
+#import math  rhtrthrh
 
 # distribuye en una o mas filas dentro del container
 # devuelve: container_width_opt, container_height, numero de filas y coordenadas de los sellos dentro del contenedor
@@ -29,10 +29,9 @@ def ubicar_serie_sellos(max_container_width, sellos, min_gap= 0.25, min_row_gap=
     num_sellos = len(sellos)
 
     while last_pos < num_sellos:
-        to_lastpos = sellos[last_pos: last_pos+1]    
-        while (efective_width(to_lastpos)< max_container_width) and last_pos < num_sellos:                
-            last_pos +=1 
-            to_lastpos = sellos[init_pos: last_pos]                                        
+        while (efective_width(sellos[init_pos: last_pos+1]) <= max_container_width) and last_pos < num_sellos:
+           to_lastpos = sellos[init_pos: last_pos+1] 
+           last_pos +=1
         sub_serie.append(to_lastpos)
         row_heigth = efective_heigth(sub_serie[row-1])
         container_width = max(container_width, efective_width(to_lastpos))
@@ -41,12 +40,14 @@ def ubicar_serie_sellos(max_container_width, sellos, min_gap= 0.25, min_row_gap=
             coordenadas.append((x, container_height, round(x+ sellos[j][0], 1), round(row_heigth- sellos[j][1],1)))
             x += sellos[j][0] + min_gap
         x = container_x_up_left
-        init_pos = last_pos+1
+        init_pos = last_pos
         row += 1
 
 
 # optimizar... distribuir lo mas parejo por filas          
- 
+
+    
+
     rows = len(sub_serie)
     result=[container_width, container_height, rows, coordenadas]
 
