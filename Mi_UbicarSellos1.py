@@ -1,54 +1,67 @@
-#import math  rhtrthrh
+import math  
 
-# distribuye en una o mas filas dentro del container
+# distribuye serie en una o mas filas dentro del contenedor
 # devuelve: container_width_opt, container_height, numero de filas y coordenadas de los sellos dentro del contenedor
 # relativas a la esq. izq. superior.
-def ubicar_serie_sellos(max_container_width, sellos, min_gap= 0.25, min_row_gap= 0.5):   # sellos =[ancho, alto, year, valor]
+
+def ubicar_serie_sellos(max_container_width, stamps, min_gaps_x= 0.25, min_gaps_y= 0.5):   # sellos =[ancho, alto, year, valor]
 
     def efective_width(serie):
         width= 0                      # Ancho con los gaps
         for stamp in serie:
-            width += stamp[0] + min_gap
-        return width 
+            width += stamp[0] + gaps_x      
+        return (width - gaps_x)         # ni a la izq del 1er sello ni a la der del ultimo hay gaps
     
-    def efective_heigth(serie):       # Alto con los gaps
-        heigth = 0
+    def row_height(serie):
+        height = 0
         for stamp in serie:
-            heigth += stamp[1]
-        heigth += min_row_gap   
-        return heigth 
+            height = max(stamp[1], height)    
+        return height        
 
-    x =container_x_up_left =0     # inicio coordenadas relativas del contenedor. incrementan hacia abajo y derecha
-    y =container_y_up_left =0     # modificar para cambiar area de trabajo dentro del contenedor   
-    container_height = container_width =0 
+    def gap_width(serie, container_width):   # para reajustar ancho de fila
+        num_sellos = len(serie)
+        width = 0
+        for j in range(num_sellos):
+            width += serie[j][0]  
+        gap = ((container_width - width) / (num_sellos-1))    # no al ultimo                
+        return gap            
+       
+    # distribuir la misma cantidad de sellos por fila. Luego ajustar el ancho del contenedor a la fila mas ancha
+    # y reajustar los gaps de las otras filas.  
  
-    coordenadas = []                # coordenadas del sello: x= esq. izq inferior , y= altura del sello mas alto  , ancho, alto
-    sub_serie = []
-    init_pos = last_pos = 0 
-    row = 1
-    num_sellos = len(sellos)
+    x =container_x_up_left =0               # inicio coordenadas relativas del contenedor. incrementan hacia abajo y derecha
+    container_height = container_width =0 
+    coordenadas = []  
+    gaps_x = min_gaps_x
 
-    while last_pos < num_sellos:
-        while (efective_width(sellos[init_pos: last_pos+1]) <= max_container_width) and last_pos < num_sellos:
-           to_lastpos = sellos[init_pos: last_pos+1] 
-           last_pos +=1
-        sub_serie.append(to_lastpos)
-        row_heigth = efective_heigth(sub_serie[row-1])
-        container_width = max(container_width, efective_width(to_lastpos))
-        container_height += row_heigth + min_row_gap
-        for j in range(init_pos, last_pos):                                                             
-            coordenadas.append((x, container_height, round(x+ sellos[j][0], 1), round(row_heigth- sellos[j][1],1)))
-            x += sellos[j][0] + min_gap
+    num_stamps = len(stamps)  
+    rows=  math.ceil(efective_width(stamps) / max_container_width )   # max cnt de filas
+    height = 0
+ 
+   
+    # ancho optimo del contenedor
+    inicio = 0
+    cociente, resto = divmod(num_stamps, rows)          # division modular. Resto = lo que resta entre el cociente y num_sellos
+    for i in range(rows):
+        fin = int(inicio + cociente + (1 if i < resto else 0))              
+        tmp= efective_width(stamps[inicio:fin])  # for testing
+        container_width = max(container_width, efective_width(stamps[inicio:fin]))  # al final se queda con el ancho de la fila mayor
+        inicio = fin
+
+    # repartir sellos y ajustar coordenadas
+    fin = inicio = 0  
+    for i in range(rows):
+        fin = int(inicio + cociente + (1 if i < resto else 0))
+        gaps_x = max(min_gaps_x, gap_width(stamps[inicio:fin], container_width))   # si es la fila mas ancha quedan igual
+        height += row_height(stamps[inicio:fin])      
+        container_height += row_height(stamps[inicio:fin]) + min_gaps_y
+        for stamp in stamps[inicio:fin]:                                                             
+            coordenadas.append((round(x,2), round(height,2), round(x+ stamp[0],2), round(height- stamp[1],2)))
+            x += stamp[0] + gaps_x
+        inicio = fin            
         x = container_x_up_left
-        init_pos = last_pos
-        row += 1
+        height += min_gaps_y
 
-
-# optimizar... distribuir lo mas parejo por filas          
-
-    
-
-    rows = len(sub_serie)
     result=[container_width, container_height, rows, coordenadas]
 
     return result
@@ -58,16 +71,8 @@ def ubicar_serie_sellos(max_container_width, sellos, min_gap= 0.25, min_row_gap=
 
 
 
-
-
-
-
-
-
 #_________________________________________________________________________________________________________________
-#   Para probar el resultado de manera visual:
-# ________________________________________________________________________________________________________________  
-
+#   Para probar el resultado de manera visual: 
 
 
 import tkinter as tk
@@ -82,13 +87,14 @@ def visualizar_sellos(container_width, container_height, coordenadas):
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
     window.attributes('-fullscreen', True)
+    window.configure(bg="black")
 
-    relacion_x = 80 
-    relacion_y = 40
+    relacion_x = (screen_width / container_width) * 0.8 
+    relacion_y = (screen_height / container_height) *0.8
 
     # container:
    
-    canvas = tk.Canvas(window, width= container_width* relacion_x, height= container_height * relacion_y, bg="blue")
+    canvas = tk.Canvas(window, width= screen_width* 0.8, height= screen_height* 0.8, bg="black")
     canvas.create_rectangle(0, 0, container_width* relacion_x , container_height* relacion_y, fill= "blue")
     canvas.pack()
     boton = tk.Button(window, text= "cerrar", command= cerrar_window)
@@ -97,8 +103,8 @@ def visualizar_sellos(container_width, container_height, coordenadas):
     #window.mainloop()
 
     #sellos
-    for x, y, ancho_sello, alto_sello in coordenadas:
-        canvas.create_rectangle(x, y, ancho_sello* relacion_x, alto_sello* relacion_y, fill= "white") 
+    for x, y, ancho, alto in coordenadas:
+        canvas.create_rectangle(x* relacion_x, y* relacion_y, ancho* relacion_x, alto* relacion_y, fill= "white") 
     window.mainloop()
 
 def generar_lista_sellos(cantidad, min_dim, max_dim, year1, year2, valormax):
@@ -162,8 +168,9 @@ def comparar_sellos(sello):
 
 # ________________PRUEBA:_______________________________________
 
+# ( num de sellos, random alto y ancho, rango años, valor facial)
+sellos = generar_lista_sellos(11, 0.8, 1.5, 1901, 1910, 50)   #  retorna lista sellos =[ancho, alto, year, valor]
 
-sellos = generar_lista_sellos(12, 0.5, 1.2, 1901, 1910, 50)   #  retorna lista sellos =[ancho, alto, year, valor]
 criterio = ["y_down", "w_up", "h_down", "v_up"]  # Ordenar por año descendente, luego ancho ascendente, luego alto descendente y finalmente valor ascendente.
 #sellos = reorganizar_sellos(sellos, criterio)   # si es necesario reorganizar serie previo a llamar la funcion 
 max_container_width = 6.5
@@ -211,4 +218,25 @@ if resultado:  # container_width_opt, container_height, numero de filas y coorde
         return ancho
 
       
+"""
+"""   series = []
+    init_pos = last_pos = 0 
+    row = 1
+    num_sellos = len(sellos)
+  
+    while last_pos < num_sellos:
+        while (efective_width(sellos[init_pos: last_pos+1]) <= max_container_width) and last_pos < num_sellos:
+           to_lastpos = sellos[init_pos: last_pos+1] 
+           last_pos +=1
+        series.append(to_lastpos)
+        row_heigth = efective_heigth(series[row-1])
+        container_width = max(container_width, efective_width(to_lastpos))
+        container_height += row_heigth + min_row_gap
+        for j in range(init_pos, last_pos):                                                             
+            coordenadas.append((round(x,1), round(container_height,1), round(x+ sellos[j][0], 1), round(row_heigth- sellos[j][1],1)))
+            x += sellos[j][0] + min_gap
+        x = container_x_up_left
+        init_pos = last_pos
+        rows = row
+        row += 1
 """
