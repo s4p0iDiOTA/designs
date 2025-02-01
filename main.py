@@ -1,3 +1,5 @@
+from pdfs.pdf_handling import print_to_pdf
+
 # Finds the container for the stamps in the series that has the minimum height within a given width.
 # Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
 def get_series_container_min_height(series, max_width, stamp_padding, non_inclusive_max_width=False):
@@ -19,12 +21,12 @@ def get_series_container_min_height(series, max_width, stamp_padding, non_inclus
         # Check if by adding this stamp we would go over the max_width. If so, move to the next line.
         if last_width + width > max_width:
             last_width = 0
-            starting_height = series_container["height"]
+            starting_height = series_container["height"] - stamp_padding
         
         # Check if by adding this stamp we would be at or over the max_width. If so, move to the next line. Only if non_inclusive_max_width was set to True.
         if non_inclusive_max_width and last_width + width >= max_width:
             last_width = 0
-            starting_height = series_container["height"]
+            starting_height = series_container["height"] - stamp_padding
             # Check if this was happened on the first item. If so, return an empty container.
             if len(series_container["stamps"]) < 1:
                 return series_container
@@ -32,8 +34,8 @@ def get_series_container_min_height(series, max_width, stamp_padding, non_inclus
         # Set the relative coordinates for the stamp within the container and add the stamp to the list.
         x1 = last_width + stamp_padding
         y1 = starting_height + stamp_padding
-        x2 = x1 + width - stamp_padding
-        y2 = y1 + height - stamp_padding
+        x2 = x1 + width - 2 * stamp_padding
+        y2 = y1 + height - 2 * stamp_padding
         rect = [x1,y1,x2,y2]
         
         series_container["stamps"].append({
@@ -46,9 +48,9 @@ def get_series_container_min_height(series, max_width, stamp_padding, non_inclus
         
         # Check if the width or height of the container should change by adding this stamp. If so, update it.
         if x2 > series_container["width"]:
-            series_container["width"] = x2
+            series_container["width"] = x2 + stamp_padding
         if y2 > series_container["height"]:
-            series_container["height"] = y2        
+            series_container["height"] = y2 + stamp_padding      
         
     return series_container
 
@@ -174,12 +176,18 @@ test_data = [
 
 # When this file is executed, run some scenarios to check the functionality. This can be transformed into tests in the future.
 print("Base case, 1 stamp. Expected: height and width equal to stamp's height and width plus padding. (arbitrary decision)")
-print(get_optimal_series_container(series=test_data[0], max_width=6.5))
+container = get_optimal_series_container(series=test_data[0], max_width=6.5)
+print_to_pdf(container, "case1.pdf")
 print("Stamps fit in one line. Expected: height will be the tallest stamp's height, width is the sum of all (plus padding)")
-print(get_optimal_series_container(series=test_data[1], max_width=6.5))
+container = get_optimal_series_container(series=test_data[1], max_width=6.5)
+print_to_pdf(container, "case2.pdf")
 print("Stamps don't fit in one line. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
-print(get_optimal_series_container(series=test_data[2], max_width=6.5))
+container = get_optimal_series_container(series=test_data[2], max_width=6.5)
+print_to_pdf(container, "case3.pdf")
 print("Stamps go evenly in 2 lines. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
-print(get_optimal_series_container(series=test_data[3], max_width=6.5))
+container = get_optimal_series_container(series=test_data[3], max_width=6.5)
+print_to_pdf(container, "case4.pdf")
 print("Stamps same stamps as before but different order. Expected: wider than the previous, but less height. Changing rows to reduce width causes more height.")
-print(get_optimal_series_container(series=test_data[4], max_width=6.5))
+container = get_optimal_series_container(series=test_data[4], max_width=6.5)
+print_to_pdf(container, "case5.pdf")
+

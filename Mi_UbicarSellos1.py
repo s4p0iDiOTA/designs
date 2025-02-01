@@ -78,33 +78,38 @@ def ubicar_serie_sellos(max_container_width, stamps, min_gaps_x= 0.25, min_gaps_
 import tkinter as tk
 
 def visualizar_sellos(container_width, container_height, coordenadas):
-    def cerrar_window():
-        window.destroy
     
-   
     window = tk.Tk()
+    window.withdraw()      
+    contenedor = tk.Toplevel()  # Crea la nueva ventana
 
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
     window.attributes('-fullscreen', True)
     window.configure(bg="black")
 
-    relacion_x = (screen_width / container_width) * 0.8 
-    relacion_y = (screen_height / container_height) *0.8
+    adp = 0.8
+    relacion = container_height* screen_height / container_width 
+    while relacion* adp > screen_height:
+        adp -= 0.1 
 
     # container:
-   
-    canvas = tk.Canvas(window, width= screen_width* 0.8, height= screen_height* 0.8, bg="black")
-    canvas.create_rectangle(0, 0, container_width* relacion_x , container_height* relacion_y, fill= "blue")
+    contenedor.title("Contenedor")
+    contenedor.geometry(f"{int(screen_height*adp)}x{int(relacion*adp)}+{100}+{20}") 
+    contenedor.focus_set()  # Mueve el cursor a la nueva ventana
+    x= int(screen_height * adp) 
+    y= int(container_height* screen_height / container_width* adp)
+    canvas = tk.Canvas(contenedor, width= x, height= y) 
     canvas.pack()
-    boton = tk.Button(window, text= "cerrar", command= cerrar_window)
-    boton.pack
-
-    #window.mainloop()
-
-    #sellos
+    
+    #sellos:
     for x, y, ancho, alto in coordenadas:
-        canvas.create_rectangle(x* relacion_x, y* relacion_y, ancho* relacion_x, alto* relacion_y, fill= "white") 
+        x1= int(x * screen_height / container_width *adp)
+        x2= int(ancho * screen_height / container_width *adp)
+        y1= int(y * container_height* screen_height / container_width / container_height * adp)
+        y2= int(alto * (container_height* screen_height / container_width) / container_height * adp)
+        canvas.create_rectangle(x1, y1, x2, y2, fill="blue", outline="black") 
+
     window.mainloop()
 
 def generar_lista_sellos(cantidad, min_dim, max_dim, year1, year2, valormax):
@@ -170,10 +175,11 @@ def comparar_sellos(sello):
 
 # ( num de sellos, random alto y ancho, rango años, valor facial)
 sellos = generar_lista_sellos(11, 0.8, 1.5, 1901, 1910, 50)   #  retorna lista sellos =[ancho, alto, year, valor]
+#sellos = [[1,2,0,0],[2,1,0,0],[1,2,0,0],[2,1,0,0]]
 
 criterio = ["y_down", "w_up", "h_down", "v_up"]  # Ordenar por año descendente, luego ancho ascendente, luego alto descendente y finalmente valor ascendente.
 #sellos = reorganizar_sellos(sellos, criterio)   # si es necesario reorganizar serie previo a llamar la funcion 
-max_container_width = 6.5
+max_container_width = 6
 
 resultado = ubicar_serie_sellos(max_container_width, sellos)
 
