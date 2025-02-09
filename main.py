@@ -1,83 +1,69 @@
+from container.container_handler import get_optimal_series_container
+from file_operations.write_to_file import save_json
 from pdfs.pdf_handling import print_to_pdf
 
-# Finds the container for the stamps in the series that has the minimum height within a given width.
-# Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
-def get_series_container_min_height(series, max_width, stamp_padding, non_inclusive_max_width=False):
-    # This can be converted into an object later.
-    series_container = {
-        "height": 0,
-        "width": 0,
-        "stamps": []
-    }
-    
-    starting_height = 0
-    last_width = 0
-    
-    for stamp in series["stamps"]:
-        # The effective height and width of the stamp is what the stamp needs plus padding on each direction. 
-        height = stamp["height"] + 2 * stamp_padding
-        width = stamp["width"] + 2 * stamp_padding
-        
-        # Check if by adding this stamp we would go over the max_width. If so, move to the next line.
-        if last_width + width > max_width:
-            last_width = 0
-            starting_height = series_container["height"] - stamp_padding
-        
-        # Check if by adding this stamp we would be at or over the max_width. If so, move to the next line. Only if non_inclusive_max_width was set to True.
-        if non_inclusive_max_width and last_width + width >= max_width:
-            last_width = 0
-            starting_height = series_container["height"] - stamp_padding
-            # Check if this was happened on the first item. If so, return an empty container.
-            if len(series_container["stamps"]) < 1:
-                return series_container
-            
-        # Set the relative coordinates for the stamp within the container and add the stamp to the list.
-        x1 = last_width + stamp_padding
-        y1 = starting_height + stamp_padding
-        x2 = x1 + width - 2 * stamp_padding
-        y2 = y1 + height - 2 * stamp_padding
-        rect = [x1,y1,x2,y2]
-        
-        series_container["stamps"].append({
-            "rect": rect,
-            "metadata": stamp
-            })
-                
-        # Set the last_width to the last x coordinate on this line.
-        last_width = x2
-        
-        # Check if the width or height of the container should change by adding this stamp. If so, update it.
-        if x2 > series_container["width"]:
-            series_container["width"] = x2 + stamp_padding
-        if y2 > series_container["height"]:
-            series_container["height"] = y2 + stamp_padding      
-        
-    return series_container
 
-# Finds the container for the stamps in the series with the minimum height and minimum width for that height.
-# Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
-def get_optimal_series_container(series, max_width, stamp_padding=0.5):
-    # Do a first run to find the optimal height and initial width.
-    smallest_container = get_series_container_min_height(series=series, max_width=max_width, stamp_padding=stamp_padding, non_inclusive_max_width=False)
+# TODO: Clean this function to separate concerns, extracting all pdf operations away. Assume data is in points. Move container operations to appropiate module.
+import fitz  # PyMuPDF
+from pdfs.pdf_handling import formato_pdf
+def distribute_containers(containers, alignment="uniform", pageformat="A4", output_pdf_path="album_pages.pdf"):
     
-    # Keep calling the function with a reduced width until it has to go over the height to accomodate it, or it can't place any stamps.
-    while True:
-        # Passing non_inclusive_max_width=True makes the function look for a smaller width than the one passed.
-        next_container = get_series_container_min_height(series=series, max_width=smallest_container["width"], stamp_padding=stamp_padding, non_inclusive_max_width=True)
-        # Check if the function could not place any stamps with the width passed and returned an empty container.
-        if next_container["height"] == 0:
-            break
-        # Check if the returned container has a higher height.
-        if next_container["height"] > smallest_container["height"]:
-            break
-        # If a smaller width was found, save it.
-        elif next_container["width"] < smallest_container["width"]:
-            smallest_container = next_container
-    
-    return smallest_container
+    # Get the dimensions of the specified page format
+    page_width = formato_pdf[pageformat]["width"] * 72    # inches to points
+    page_height = formato_pdf[pageformat]["heigth"] * 72  # inches to points
+
+    # Create the PDF document
+    pdf_document = fitz.open()
+
+    current_x = 0
+    current_y = page_height
+    max_height_on_page = 0
+
+    for container in containers:
+        container_width = container["width"] * 72    
+        container_height = container["height"] * 72  
+
+        # Check if the container fits in the current row. 
+        if current_x + container_width > page_width:  
+            #move to the next row.       
+            current_x = 0
+            current_y -= max_height_on_page
+            max_height_on_page = 0
+
+        # Check if the container fits in the current page
+        if current_y - container_height < 0:
+            # Add a new page
+            pdf_document.new_page(width=page_width, height=page_height)
+            current_x = 0
+            current_y = page_height
+            max_height_on_page = 0
+
+        # Ensure there is at least one page in the document
+        if len(pdf_document) == 0:
+            pdf_document.new_page(width=page_width, height=page_height)
+
+        # Draw the container on the PDF
+        page = pdf_document[-1]  # Get the last page
+        container_rect = fitz.Rect(current_x, current_y - container_height, current_x + container_width, current_y)
+        page.draw_rect(container_rect, color=(1, 0, 0), width=2)  # Red 
+
+        # Draw the stamps inside the container
+        for stamp in container["stamps"]:
+            x0, y0, x1, y1 = [i * 72 for i in stamp["rect"]]  
+            stamp_rect = fitz.Rect(current_x + x0, current_y - y1, current_x + x1, current_y - y0)
+            page.draw_rect(stamp_rect, color=(0, 0, 1), width=2)  # blue
+
+        current_x += container_width
+        max_height_on_page = max(max_height_on_page, container_height)
+
+    # Save the PDF
+    pdf_document.save(output_pdf_path)
+    pdf_document.close()
+
+# TODO: Move test data to a file. Create a read_json(file) under file_operations.read_from_file.py and use it to get the test data. Read serialize/deserialize for more info.
 
 # Sample data to run scenarios and validate the functions.
-test_data = [
+test_data = [ 
     {
         "name": "serie_with_one_stamp",
         "year": "",
@@ -168,26 +154,79 @@ test_data = [
             },
             {
                 "height": 1,
-                "width": 1.5
+                "width": 2
+            }
+        ]
+    },
+    {
+        "name": " otro para test ajuste vertical -- case6 ",
+        "year": "",
+        "stamps": [
+            {
+                "height": 1.2,
+                "width": 1.2
+            },
+            {
+                "height": 1.6,
+                "width": 0.8
+            },
+            {
+                "height": 1.3,
+                "width": 1.2
+            },
+            {
+                "height": 1.8,
+                "width": 1.4
+            },
+            {
+                "height": 1,
+                "width": 1.4
+            },
+            {
+                "height": 1.4,
+                "width": 1.2,
+            },
+            {
+                "height": 1,
+                "width": 2
             }
         ]
     }
 ]
 
-# When this file is executed, run some scenarios to check the functionality. This can be transformed into tests in the future.
-print("Base case, 1 stamp. Expected: height and width equal to stamp's height and width plus padding. (arbitrary decision)")
-container = get_optimal_series_container(series=test_data[0], max_width=6.5)
-print_to_pdf(container, "case1.pdf")
-print("Stamps fit in one line. Expected: height will be the tallest stamp's height, width is the sum of all (plus padding)")
-container = get_optimal_series_container(series=test_data[1], max_width=6.5)
-print_to_pdf(container, "case2.pdf")
-print("Stamps don't fit in one line. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
-container = get_optimal_series_container(series=test_data[2], max_width=6.5)
-print_to_pdf(container, "case3.pdf")
-print("Stamps go evenly in 2 lines. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
-container = get_optimal_series_container(series=test_data[3], max_width=6.5)
-print_to_pdf(container, "case4.pdf")
-print("Stamps same stamps as before but different order. Expected: wider than the previous, but less height. Changing rows to reduce width causes more height.")
-container = get_optimal_series_container(series=test_data[4], max_width=6.5)
-print_to_pdf(container, "case5.pdf")
 
+
+# When this file is executed, run some scenarios to check the functionality. This can be transformed into tests in the future.
+
+#print("Base case, 1 stamp. Expected: height and width equal to stamp's height and width plus padding. (arbitrary decision)")
+container1 = get_optimal_series_container(series=test_data[0], max_width=6.5)
+#save_json(json_object=container1, file_name="container1")
+#print_to_pdf(container, "case1.pdf")
+
+#print("Stamps fit in one line. Expected: height will be the tallest stamp's height, width is the sum of all (plus padding)")
+container2 = get_optimal_series_container(series=test_data[1], max_width=6.5)
+#save_container("container2", container)
+#print_to_pdf(container, "case2.pdf")
+
+#print("Stamps don't fit in one line. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
+container3 = get_optimal_series_container(series=test_data[2], max_width=6.5)
+#save_container("container3", container)
+#print_to_pdf(container, "case3.pdf")
+
+#print("Stamps go evenly in 2 lines. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
+container4 = get_optimal_series_container(series=test_data[3], max_width=6.5)
+#save_container("container4", container)
+#print_to_pdf(container, "case4.pdf")
+
+#print("Stamps same stamps as before but different order. Expected: wider than the previous, but less height. Changing rows to reduce width causes more height.")
+container5 = get_optimal_series_container(series=test_data[4], max_width=6.5)
+#save_container("container5", container)
+#print_to_pdf(container, "case5.pdf")
+
+container6 = get_optimal_series_container(series=test_data[5], max_width=6.5)
+#save_container("container6", container)
+#print_to_pdf(container, "case6.pdf")
+
+
+containers = [container1, container2, container3,container4, container5, container6]
+distribute_containers(containers, alignment="uniform",  pageformat="A4", output_pdf_path="album_pages.pdf")
