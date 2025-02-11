@@ -1,5 +1,6 @@
 import fitz  # PyMuPDF
- 
+from data.models import SeriesContainer
+
 formato_pdf = {                
     "letter":              # 8.5x 11" = 215.9 x 279  mm
         {
@@ -35,25 +36,26 @@ formato_pdf = {
         
 width, height = formato_pdf["legal"].values()     # seleccionar el formato y ponerlo aqui
 
-def print_to_pdf(container, output_pdf_path="output.pdf"):
+def print_to_pdf(container: SeriesContainer, output_pdf_path="output.pdf"):
     # Open new PDF document
     new_pdf_document = fitz.open()
     # Add a page to the document
     new_page = new_pdf_document.new_page(width=width*72, height=height*72)  # in inches
     
     # Define rectangle coordinates (x0, y0, x1, y1)
-    container_rect = fitz.Rect(0, 0, container["width"]*72, container["height"]*72)
+    container_rect = fitz.Rect(0, 0, container.width*72, container.height*72)
 
     # Draw the rectangle
     new_page.draw_rect(container_rect, color=(1, 0, 0), width=2)  # Red rectangle with 2pt width
     
-    for stamp in container["stamps"]:        
-        # Define rectangle coordinates (x0, y0, x1, y1)
-        x0, y0, x1, y1 = [i*72 for i in stamp["rect"]]             # to inches
-        stamp_rect = fitz.Rect(x0, y0, x1, y1)
+    for row in container.rows:
+        for stamp_container in row.stamp_containers:        
+            # Define rectangle coordinates (x0, y0, x1, y1)
+            x0, y0, x1, y1 = [i*72 for i in stamp_container.rect]  # to inches
+            stamp_rect = fitz.Rect(x0, y0, x1, y1)
 
-        # Draw the rectangle
-        new_page.draw_rect(stamp_rect, color=(0, 0, 1), width=2)  # Red rectangle with 2pt width
+            # Draw the rectangle
+            new_page.draw_rect(stamp_rect, color=(0, 0, 1), width=2)  # Blue rectangle with 2pt width
     
     # Save the new PDF
     new_pdf_document.save(output_pdf_path)
