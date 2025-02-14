@@ -2,73 +2,98 @@ from typing import List
 from container.container_handler import get_optimal_series_container
 from data.models import Series, SeriesContainer
 from file_operations.write_to_file import save_json
-from pdfs.pdf_handling import print_to_pdf
+from pdfs.pdf_handling import print_stamps_container_to_pdf, print_album_pages_to_pdf
 
+# TODO: Clean this function to separate concerns, extracting all pdf operations away. Assume data is in points.
+#  Move container operations to appropiate module.
 
-# TODO: Clean this function to separate concerns, extracting all pdf operations away. Assume data is in points. Move container operations to appropiate module.
-import fitz  # PyMuPDF
+from data.models import AlbumPage
 from pdfs.pdf_handling import formato_pdf
-def distribute_containers(containers: List[SeriesContainer], alignment="uniform", pageformat="A4", output_pdf_path="album_pages.pdf"):
-    
-    # Get the dimensions of the specified page format
-    page_width = formato_pdf[pageformat]["width"] * 72    # inches to points
-    page_height = formato_pdf[pageformat]["heigth"] * 72  # inches to points
 
-    # Create the PDF document
-    pdf_document = fitz.open()
+def distribute_serial_containers_in_pages(list_of_containers: List[SeriesContainer], page_size: str, alignment: str = "uniform"):
+    page_dimensions = formato_pdf[page_size]
+   # work_area_width, work_area_height = page_dimensions
+    work_area_width = page_dimensions["width"]
+    work_area_height = page_dimensions["height"]
 
     current_x = 0
-    current_y = page_height
-    max_height_on_page = 0
+    current_y = 0
+    max_height_on_row = 0
+    album_pages = []
+    current_page = AlbumPage(page_size, page_dimensions)
 
-    for container in containers:
-        container_width = container.width * 72    
-        container_height = container.height * 72  
+    for container in list_of_containers:
+        container_width = container.width
+        container_height = container.height
 
-        # Check if the container fits in the current row. 
-        if current_x + container_width > page_width:  
-            #move to the next row.       
+        # Check if the container fits in the current row
+        if current_x + container_width > work_area_width:
+            # Move to the next row
             current_x = 0
-            current_y -= max_height_on_page
-            max_height_on_page = 0
+            current_y += max_height_on_row
+            max_height_on_row = 0
 
-        # Check if the container fits in the current page
-        if current_y - container_height < 0:
-            # Add a new page
-            pdf_document.new_page(width=page_width, height=page_height)
+        # Check if the container fits in the current work area
+        if current_y + container_height > work_area_height:
+            # Add the current page to the album pages and create a new page
+            album_pages.append(current_page)
+            current_page = AlbumPage(page_size, page_dimensions)
             current_x = 0
-            current_y = page_height
-            max_height_on_page = 0
+            current_y = 0
+            max_height_on_row = 0
 
-        # Ensure there is at least one page in the document
-        if len(pdf_document) == 0:
-            pdf_document.new_page(width=page_width, height=page_height)
-
-        # Draw the container on the PDF
-        page = pdf_document[-1]  # Get the last page
-        container_rect = fitz.Rect(current_x, current_y - container_height, current_x + container_width, current_y)
-        page.draw_rect(container_rect, color=(1, 0, 0), width=2)  # Red 
-
-        # Draw the stamps inside the container
-        for row in container.rows:
-            for stamp_container in row.stamp_containers:
-                x0, y0, x1, y1 = [i * 72 for i in stamp_container.rect]  # to inches
-                stamp_rect = fitz.Rect(current_x + x0, current_y - y1, current_x + x1, current_y - y0)
-                page.draw_rect(stamp_rect, color=(0, 0, 1), width=2)  # blue
-
+        # Add the container to the current page
+        current_page.add_container(current_x, current_y, container)
         current_x += container_width
-        max_height_on_page = max(max_height_on_page, container_height)
+        max_height_on_row = max(max_height_on_row, container_height)
 
-    # Save the PDF
-    pdf_document.save(output_pdf_path)
-    pdf_document.close()
+    # Add the last page
+    album_pages.append(current_page)
 
-# TODO: Move test data to a file. Create a read_json(file) under file_operations.read_from_file.py and use it to get the test data. Read serialize/deserialize for more info.
+    # Align the containers in each page
+    for page in album_pages:
+        align_containers_in_page(page, work_area_width, alignment)
 
-# Sample data to run scenarios and validate the functions.
+    return album_pages
+
+def align_containers_in_page(page: AlbumPage, work_area_width: float, alignment: str):
+    rows = []
+    current_row = []
+    current_x = 0
+    current_y = 0
+    max_height_on_row = 0
+
+    for x, y, container in page.containers:
+        if current_x + container.width > work_area_width:
+            rows.append((current_row, max_height_on_row))
+            current_row = []
+            current_x = 0
+            current_y += max_height_on_row
+            max_height_on_row = 0
+
+        current_row.append((x, y, container))
+        current_x += container.width
+        max_height_on_row = max(max_height_on_row, container.height)
+
+    rows.append((current_row, max_height_on_row))
+
+    for row, row_height in rows:
+        if alignment == "uniform":
+            total_width = sum(container.width for _, _, container in row)
+            space = (work_area_width - total_width) / (len(row) + 1)
+            current_x = space
+            for i, (x, y, container) in enumerate(row):
+                new_x = current_x
+                new_y = y + (row_height - container.height)
+                row[i] = (new_x, new_y, container)
+                current_x += container.width + space
+
+    page.containers = [item for row, _ in rows for item in row]
+
+
 test_data = [ 
     {
-        "name": "serie_with_one_stamp",
+        "name": "serie_with_one_stamp", # caso1
         "year": "",
         "stamps": [
             {
@@ -78,7 +103,7 @@ test_data = [
         ]
     },
     {
-        "name": "serie_that_fits_in_6.5",
+        "name": "serie_that_fits_in_6.5", # caso2
         "year": "",
         "stamps": [
             {
@@ -96,15 +121,15 @@ test_data = [
         ]
     },
     {
-        "name": "serie_that_does_not_fit_in_6.5",
+        "name": "serie_that_does_not_fit_in_6.5", # caso3
         "year": "",
         "stamps": [
             {
-                "height": 2,
+                "height": 0.8,
                 "width": 1
             },
             {
-                "height": 2,
+                "height": 1.2,
                 "width": 1
             },
             {
@@ -112,13 +137,13 @@ test_data = [
                 "width": 2
             },
             {
-                "height": 2,
+                "height": 1.5,
                 "width": 1
             }
         ]
     },
     {
-        "name": "serie_that_should_be_narrow",
+        "name": "serie_that_should_be_narrow", # caso4
         "year": "",
         "stamps": [
             {
@@ -140,7 +165,7 @@ test_data = [
         ]
     },
     {
-        "name": "serie_that_should_be_wide",
+        "name": "serie_that_should_be_wide", # caso5
         "year": "",
         "stamps": [
             {
@@ -162,7 +187,7 @@ test_data = [
         ]
     },
     {
-        "name": " otro para test ajuste vertical -- case6 ",
+        "name": " para llegar a 2 paginas", # caso6 
         "year": "",
         "stamps": [
             {
@@ -187,6 +212,22 @@ test_data = [
             },
             {
                 "height": 1.4,
+                "width": 1.2
+            },
+            {
+                "height": 1,
+                "width": 2
+            },
+            {
+                "height": 1.8,
+                "width": 1.4
+            },
+            {
+                "height": 1,
+                "width": 1.4
+            },
+            {
+                "height": 1.4,
                 "width": 1.2,
             },
             {
@@ -197,39 +238,31 @@ test_data = [
     }
 ]
 
+series = Series(test_data[0])
+container1 = get_optimal_series_container(series=series, max_width=6.5, stamp_padding= 0.25)
+series = Series(test_data[1])
+container2 = get_optimal_series_container(series=series, max_width=6.5, stamp_padding= 0.25)
+series = Series(test_data[2])
+container3 = get_optimal_series_container(series=series, max_width=6.5, stamp_padding= 0.25)
+series = Series(test_data[3])
+container4 = get_optimal_series_container(series=series, max_width=6.5, stamp_padding= 0.25)
+series = Series(test_data[4])
+container5 = get_optimal_series_container(series=series, max_width=6.5, stamp_padding= 0.25)
+series=Series(test_data[5])
+container6 = get_optimal_series_container(series=series, max_width=6.5, stamp_padding= 0.25)
+
+#save_json(containers, "containers.json")
+#print_stamps_container_to_pdf(container6, "series_container.pdf")
+
+containers= list_of_containers = [container2, container3, container4, container5, container6]   
+album_pages= distribute_serial_containers_in_pages(containers, page_size="A4", alignment= "uniform")
+print_album_pages_to_pdf(album_pages, "album_pages.pdf")
+    
 
 
-# When this file is executed, run some scenarios to check the functionality. This can be transformed into tests in the future.
-
-#print("Base case, 1 stamp. Expected: height and width equal to stamp's height and width plus padding. (arbitrary decision)")
-container1 = get_optimal_series_container(series=Series(test_data[0]), max_width=6.5)
-#save_json(json_object=container1, file_name="container1")
-print_to_pdf(container1, "case1.pdf")
-
-#print("Stamps fit in one line. Expected: height will be the tallest stamp's height, width is the sum of all (plus padding)")
-container2 = get_optimal_series_container(series=Series(test_data[1]), max_width=6.5)
-#save_container("container2", container)
-print_to_pdf(container2, "case2.pdf")
-
-#print("Stamps don't fit in one line. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
-container3 = get_optimal_series_container(series=Series(test_data[2]), max_width=6.5)
-#save_container("container3", container)
-print_to_pdf(container3, "case3.pdf")
-
-#print("Stamps go evenly in 2 lines. Expected: height will be the tallest stamp's height in each row, width is the longest row (plus padding). Optimized")
-container4 = get_optimal_series_container(series=Series(test_data[3]), max_width=6.5)
-#save_container("container4", container)
-print_to_pdf(container4, "case4.pdf")
-
-#print("Stamps same stamps as before but different order. Expected: wider than the previous, but less height. Changing rows to reduce width causes more height.")
-container5 = get_optimal_series_container(series=Series(test_data[4]), max_width=6.5)
-#save_container("container5", container)
-print_to_pdf(container5, "case5.pdf")
-
-container6 = get_optimal_series_container(series=Series(test_data[5]), max_width=6.5)
-#save_container("container6", container)
-print_to_pdf(container6, "case6.pdf")
 
 
-containers = [container1, container2, container3,container4, container5, container6]
-distribute_containers(containers, alignment="uniform",  pageformat="A4", output_pdf_path="album_pages.pdf")
+
+# TODO: Move test data to a file. Create a read_json(file) under file_operations.read_from_file.py and
+#  use it to get the test data. Read serialize/deserialize for more info.
+

@@ -93,3 +93,16 @@ class SeriesContainer:
 
     def __repr__(self) -> str:
         return f"SeriesContainer(height={self.height}, width={self.width}, rows={len(self.rows)})"
+
+
+class AlbumPage:
+    def __init__(self, page_size: str, dimensions:[float, float]):
+        self.page_size = page_size
+        self.width = dimensions.get("width", 0.0)
+        self.height = dimensions.get("height", 0.0)
+        #"width"== self.width
+        #"height"== self.height 
+        self.containers = []  # List [x, y, container]
+
+    def add_container(self, x: float, y: float, container):
+        self.containers.append((x, y, container))
