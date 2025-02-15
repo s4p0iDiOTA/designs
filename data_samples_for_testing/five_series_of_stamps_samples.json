@@ -1,7 +1,8 @@
 [
     {
+        "country": "Mexico",
         "name": "serie_with_one_stamp",
-        "year": "",
+        "year": 1955,
         "stamps": [
             {
                 "height": 2,
@@ -10,8 +11,9 @@
         ]
     },
     {
+        "country": "Albania",
         "name": "serie_that_fits_in_6.5",
-        "year": "",
+        "year": 1950,
         "stamps": [
             {
                 "height": 2,
@@ -28,8 +30,9 @@
         ]
     },
     {
+        "country": "Albania",
         "name": "serie_that_does_not_fit_in_6.5",
-        "year": "",
+        "year": 1951,
         "stamps": [
             {
                 "height": 0.8,
@@ -50,8 +53,9 @@
         ]
     },
     {
+        "country": "Albania",
         "name": "serie_that_should_be_narrow",
-        "year": "",
+        "year": 1955,
         "stamps": [
             {
                 "height": 1,
@@ -72,8 +76,9 @@
         ]
     },
     {
+        "country": "Albania",
         "name": "serie_that_should_be_wide",
-        "year": "",
+        "year": 1960,
         "stamps": [
             {
                 "height": 2,
@@ -94,8 +99,9 @@
         ]
     },
     {
+        "country": "Albania",
         "name": " para llegar a 2 paginas",
-        "year": "",
+        "year": 1961,
         "stamps": [
             {
                 "height": 1.2,
