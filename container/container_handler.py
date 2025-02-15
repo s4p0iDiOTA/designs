@@ -1,4 +1,5 @@
-from data.models import Series, SeriesContainer, ContainerRow, StampContainer
+from data.models import Series, SeriesContainer, ContainerRow, StampContainer, AlbumPage
+from pdfs.pdf_handling import formato_pdf
 
 # Finds the container for the stamps in the series that has the minimum height within a given width.
 # Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
@@ -114,3 +115,86 @@ def vertical_alignment(series_container: SeriesContainer) -> SeriesContainer:
             stamp_container.rect[1] += diff  # y1 (initial pos of the stamp)
             stamp_container.rect[3] += diff  # y3 (height)
     return series_container
+
+
+# Distribute the series containers in pages
+def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContainer], page_size: str, alignment: str = "uniform"):
+    page_dimensions = formato_pdf[page_size]
+   # work_area_width, work_area_height = page_dimensions
+    work_area_width = page_dimensions["width"]
+    work_area_height = page_dimensions["height"]
+
+    current_x = 0
+    current_y = 0
+    max_height_on_row = 0
+    album_pages = []
+    current_page = AlbumPage(page_size, page_dimensions)
+
+    for container in list_of_containers:
+        container_width = container.width
+        container_height = container.height
+
+        # Check if the container fits in the current row
+        if current_x + container_width > work_area_width:
+            # Move to the next row
+            current_x = 0
+            current_y += max_height_on_row
+            max_height_on_row = 0
+
+        # Check if the container fits in the current work area
+        if current_y + container_height > work_area_height:
+            # Add the current page to the album pages and create a new page
+            album_pages.append(current_page)
+            current_page = AlbumPage(page_size, page_dimensions)
+            current_x = 0
+            current_y = 0
+            max_height_on_row = 0
+
+        # Add the container to the current page
+        current_page.add_container(current_x, current_y, container)
+        current_x += container_width
+        max_height_on_row = max(max_height_on_row, container_height)
+
+    # Add the last page
+    album_pages.append(current_page)
+
+    # Align the containers in each page
+    for page in album_pages:
+        align_containers_in_page(page, work_area_width, alignment)
+
+    return album_pages
+
+# Align the containers in each page
+def align_containers_in_page(page: AlbumPage, work_area_width: float, alignment: str):
+    rows = []
+    current_row = []
+    current_x = 0
+    current_y = 0
+    max_height_on_row = 0
+
+    for x, y, container in page.containers:
+        if current_x + container.width > work_area_width:
+            rows.append((current_row, max_height_on_row))
+            current_row = []
+            current_x = 0
+            current_y += max_height_on_row
+            max_height_on_row = 0
+
+        current_row.append((x, y, container))
+        current_x += container.width
+        max_height_on_row = max(max_height_on_row, container.height)
+
+    rows.append((current_row, max_height_on_row))
+
+    for row, row_height in rows:
+        if alignment == "uniform":
+            total_width = sum(container.width for _, _, container in row)
+            space = (work_area_width - total_width) / (len(row) + 1)
+            current_x = space
+            for i, (x, y, container) in enumerate(row):
+                new_x = current_x
+                new_y = y + (row_height - container.height)
+                row[i] = (new_x, new_y, container)
+                current_x += container.width + space
+
+    page.containers = [item for row, _ in rows for item in row]

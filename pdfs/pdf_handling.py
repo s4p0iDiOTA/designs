@@ -43,14 +43,14 @@ def print_album_pages_to_pdf(album_pages, output_pdf_path: str):
         page_width = int(album_page.width * 72)  # inches to points
         page_height = int(album_page.height * 72) # inches to points
         new_page = new_pdf_document.new_page(width=page_width, height=page_height)
-    
-        for x, y, container in album_page.containers:   # to print containers
+    # to print container:
+        for x, y, container in album_page.containers:   
             x0, y0 = x * 72, y * 72  # inches to points
             x1, y1 = (x + container.width) * 72, (y + container.height) * 72  # inches to points
             container_rect = fitz.Rect(x0, y0, x1, y1)
             new_page.draw_rect(container_rect, color=(0, 0, 1), width=2)  # Blue 
-            
-            for row in container.rows:              # to print stamps inside the container
+    # to print stamps inside the container:       
+            for row in container.rows:             
                 for stamp_container in row.stamp_containers:
                     x00, y00, x01, y01 = [coord * 72 for coord in stamp_container.rect]  
                     stamp_rect = fitz.Rect(x00 + x0, y00 + y0, x01 + x0, y01 + y0)
