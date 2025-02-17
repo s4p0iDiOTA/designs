@@ -1,0 +1,30 @@
+{
+    "album_pdf_path":"albums\\_album_sample",
+    "album_page": 
+    {
+        "format" : "customized",           
+        "borders" : 
+        {
+            "line_type": "double_line",
+            "thickness": 2,
+            "colour": "black",
+        "horiz_alignment": "uniform",
+        "vert_alignment": "middle",
+        "horiz_paddings": 0.5
+        }
+    },
+    "serial_stamps": 
+    {
+        "stamp_padding": 0.5,
+        "non_inclusive_max_width": "False",
+        "horiz_alignment": "justify"
+    },
+    
+
+    "page types": "letter= 8.5x11, legal= 8.5x14, A4= 8.27x11.69, A3= 11.9x16.4, tabloid= 11x17, customized= modify in pdfs_handling.py",    
+    "page line types": "single_line, double_line, fine_thick_line, thick_fine_line",
+    "page vertical alignment types": "top, middle, bottom",
+    "page horizontal alignment types": "uniform, ?,?,?",
+    "stamp horizontal alignment types": "justify, uniform, center, rigth"
+
+}

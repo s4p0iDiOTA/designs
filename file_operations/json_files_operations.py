@@ -43,12 +43,13 @@ def read_json(file_name: str, directory_path: str = "file_operations"): # direct
         data = json.load(file)
     return data
 
-def validate_json_file(file_path: str) -> bool:
+def validate_json_file(file_name, directory_path) -> bool:
     """
     Validates the JSON file for correct use of commas, parentheses, and brackets.
     Args: file_path (str): The path to the JSON file.
     Returns: bool: True if the JSON file is valid, False otherwise.
     """
+    file_path = os.path.join(directory_path, file_name + ".json")
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             json.load(file)

@@ -96,13 +96,10 @@ class SeriesContainer:
 
 
 class AlbumPage:
-    def __init__(self, page_size: str, dimensions:[float, float]):
-        self.page_size = page_size
-        self.width = dimensions.get("width", 0.0)
-        self.height = dimensions.get("height", 0.0)
-        #"width"== self.width
-        #"height"== self.height 
-        self.containers = []  # List [x, y, container]
+    def __init__(self, page_sizes: str):
+        self.width = page_sizes.get("width", 0.0)
+        self.height = page_sizes.get("height", 0.0)
+        self.containers = []  # List [x, y, SeriesContainer]
 
     def add_container(self, x: float, y: float, container):
         self.containers.append((x, y, container))

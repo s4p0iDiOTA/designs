@@ -2,7 +2,7 @@ from file_operations.json_files_operations import save_json, validate_json_file
 
 # select or modify the test_data to create the file
 
-saving_directory_path = "data_samples_for_testing"
+saving_directory_path = "albums\\_album_sample"
 
 #source_data:
 
@@ -100,9 +100,13 @@ test_data = [
                 "width": 2
             }
         ]
-    },
+    }
+]
+
+
+test_data1 = [ 
     {
-        "name": " para llegar a 2 paginas", # caso6 
+        "name": " Large serie of 15 stamps for generating more than one page",  
         "year": "",
         "stamps": [
             {
@@ -142,6 +146,22 @@ test_data = [
                 "width": 1.4
             },
             {
+                "height": 1.6,
+                "width": 0.8
+            },
+            {
+                "height": 1.3,
+                "width": 1.2
+            },
+            {
+                "height": 1.8,
+                "width": 1.4
+            },
+            {
+                "height": 1,
+                "width": 1.4
+            },          
+            {
                 "height": 1.4,
                 "width": 1.2
             },
@@ -154,7 +174,9 @@ test_data = [
 ]
 
 # write the file name that will be created in the saving_directory_path
+
 file_name= "five_series_of_stamps_samples"
+#file_name= "Large serie for generating 2 pages"
 
 selected_data= [data for data in test_data]
 
