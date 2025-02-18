@@ -116,7 +116,7 @@ def vert_alignment(series_container: SeriesContainer) -> SeriesContainer:
             stamp_container.rect[3] += diff  # y3 (height)
     return series_container
 
-
+# TODO: Add minimum space between series containers, both horizontal and vertical.
 # Distribute the series containers in pages
 def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContainer], page_sizes: str, horiz_alignment: str = "uniform", vert_alignment: str = "middle", horiz_padding: float = 0.5) -> list[AlbumPage]:
     current_x = 0
@@ -232,3 +232,50 @@ def vert_align_containers_in_page(page: AlbumPage, alignment): # alignment can b
     page.containers = [item for row, _ in rows for item in row]
       
 
+
+    
+# TODO: Add function for vertical alignment of the containers in the page.    
+
+# TODO: Generate the border based on border_options and paper_options.
+def get_page_border(page_size: str) -> dict:
+    page_dimensions = formato_pdf[page_size]
+    return {
+        "x1": 0,
+        "y1": 0,
+        "x2": page_dimensions["width"],
+        "y2": page_dimensions["height"]
+    }
+    
+# TODO: Create this function to orchestrate the album pages creation.
+
+# Add function to orchestrate the album pages creation
+#  - Args: content_options, border_options, paper_options, output_options
+#  - Returns: None
+#  - Get series from the database based on content_options
+#  - Get page border based on border_options and paper_options
+#  - Create series containers and distribute them in pages
+#  - Print the album pages to a PDF with the specified paper_options and output_options
+
+# content_options = {
+#    "country": "Albania",
+#    "year_range": [1951, 1960]
+#}
+
+# border_options = {
+#    "type": "single",
+#    "color": "black",
+#}
+
+# paper_options = {
+#    "type": "letter",
+#    "margins": [
+#       "top": 0.5,
+#       "bottom": 0.5,
+#       "left": 1.5,
+#       "right": 0.5,],
+#}
+
+# output_options = {
+#    "file_name": "1951-1960.pdf",
+#    "path": "my_designs\\albania",
+#}

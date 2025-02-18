@@ -22,10 +22,12 @@ class Stamp:
 class Series:
     def __init__(self, data: Dict[str, Any] = None) -> None:
         if data:
+            self.country: str = data.get("country", "")
             self.name: str = data.get("name", "")
             self.year: int = data.get("year", 0)
             self.stamps: List[Stamp] = [Stamp(stamp) for stamp in data.get("stamps", [])]
         else:
+            self.country: str = ""
             self.name: str = ""
             self.year: int = 0
             self.stamps: List[Stamp] = []
@@ -33,13 +35,14 @@ class Series:
     def to_dict(self) -> Dict[str, Any]:
         """Returns the series as a dictionary."""
         return {
-            "name": self.name,
+            "country": self.country, 
+            "name": self.name,            
             "year": self.year,
             "stamps": [stamp.to_dict() for stamp in self.stamps]
         }
 
     def __repr__(self) -> str:
-        return f"Series(name={self.name}, year={self.year}, stamps={len(self.stamps)})"
+        return f"Series(country = {self.country}, name={self.name}, year={self.year}, stamps={len(self.stamps)})"
 
 class StampContainer:
     def __init__(self, stamp: Stamp = None, rect: List[float] = None) -> None:
