@@ -196,7 +196,7 @@ def horiz_align_containers_in_page(page: AlbumPage, work_area_width: float, alig
                 current_x += container.width + space
 
     page.containers = [item for row, _ in rows for item in row]
-<<<<<<< HEAD
+
 
 # Align the containers vertically within the page.
 def vert_align_containers_in_page(page: AlbumPage, alignment): # alignment can be: "top", "middle", or "bottom". 
@@ -231,11 +231,7 @@ def vert_align_containers_in_page(page: AlbumPage, alignment): # alignment can b
             row[i] = (x, new_y, container)
 
     page.containers = [item for row, _ in rows for item in row]
-      
-
-=======
-    
-# TODO: Add function for vertical alignment of the containers in the page.    
+          
 
     
 # TODO: Add function for vertical alignment of the containers in the page.    

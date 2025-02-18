@@ -99,8 +99,9 @@
         ]
     },
     {
+        "country": "Albania",
         "name": " para llegar a 2 paginas",
-        "year": "",
+        "year": "1961",
         "stamps": [
             {
                 "height": 1.2,
@@ -146,8 +147,6 @@
                 "height": 1,
                 "width": 2
             }
-        ]
-        "country": "Albania",
-        "year": 1961,
+        ] 
     }
 ]
