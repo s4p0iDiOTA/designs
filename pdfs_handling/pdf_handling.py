@@ -1,4 +1,5 @@
 import fitz  # PyMuPDF
+import os
  
 formato_pdf = {                
     "letter":              # 8.5x 11" = 215.9 x 279  mm
@@ -36,7 +37,7 @@ formato_pdf = {
 width, height = formato_pdf["customized"].values()     # seleccionar el formato y ponerlo aqui
 
 
-def print_album_pages_to_pdf(album_pages, output_pdf_path: str):
+def print_album_pages_to_pdf(album_pages, output_file_path, output_file_name):
     new_pdf_document = fitz.open()
 
     for album_page in album_pages:
@@ -56,7 +57,11 @@ def print_album_pages_to_pdf(album_pages, output_pdf_path: str):
                     stamp_rect = fitz.Rect(x00 + x0, y00 + y0, x01 + x0, y01 + y0)
                     new_page.draw_rect(stamp_rect, color=(1, 0, 0), width=1)  # Red 
 
-    new_pdf_document.save(output_pdf_path)
+    try:
+        os.mkdir(output_file_path)
+    except FileExistsError: pass
+    output_file_name = os.path.join(output_file_path, output_file_name)
+    new_pdf_document.save(output_file_name)
     new_pdf_document.close()
 
 
@@ -75,6 +80,21 @@ def print_stamps_container_to_pdf(series_container, output_pdf_path):
 
     new_pdf_document.save(output_pdf_path)
     new_pdf_document.close()
+    
+    
+# TODO: Generate the border based on border_options and paper_options.               pdte !!!!!!!!!!!!!!!!
+
+def get_page_border(page_size: str) -> dict:
+    page_dimensions = formato_pdf[page_size]
+    return {
+        "x1": 0,
+        "y1": 0,
+        "x2": page_dimensions["width"],
+        "y2": page_dimensions["height"]
+    }
+
+
+
 
 
 def print_to_pdf(rows, work_area_width, work_area_height, output_pdf_path="output.pdf"):
@@ -105,3 +125,5 @@ def print_to_pdf(rows, work_area_width, work_area_height, output_pdf_path="outpu
     # Save the new PDF
     new_pdf_document.save(output_pdf_path)
     new_pdf_document.close()
+
+

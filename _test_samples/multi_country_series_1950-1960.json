@@ -1,0 +1,178 @@
+[
+    {
+        "country": "Mexico",
+        "name": "serie_with_one_stamp",
+        "year": 1955,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            }
+        ]
+    },
+    {
+        "country": "Alemania",
+        "name": "serie_that_fits_in_6.5",
+        "year": 1955,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 1.5
+            }
+        ]
+    },
+    {
+        "country": "Albania",
+        "name": "serie_that_fits_in_6.5",
+        "year": 1950,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 1.5
+            }
+        ]
+    },
+    {
+        "country": "Albania",
+        "name": "serie_that_does_not_fit_in_6.5",
+        "year": 1951,
+        "stamps": [
+            {
+                "height": 1.5,
+                "width": 1
+            },
+            {
+                "height": 1,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 2
+            },
+            {
+                "height": 1.5,
+                "width": 1
+            }
+        ]
+    },
+    {
+        "country": "Alemania",
+        "name": "serie_that_fits_in_6.5",
+        "year": 1956,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 1.5
+            }
+        ]
+    },
+    {
+        "country": "Mexico",
+        "name": "serie_that_fits_in_6.5",
+        "year": 1953,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 1.5
+            }
+        ]
+    },
+    {
+        "country": "Albania",
+        "name": "serie_that_should_be_narrow",
+        "year": 1955,
+        "stamps": [
+            {
+                "height": 1.5,
+                "width": 1.5
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1,
+                "width": 1.5
+            },
+            {
+                "height": 2,
+                "width": 1
+            }
+        ]
+    },
+    {
+        "country": "Cuba",
+        "name": "serie_that_fits_in_6.5",
+        "year": 1959,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 1.5
+            }
+        ]
+    },
+    {
+        "country": "Albania",
+        "name": "serie_that_should_be_wide",
+        "year": 1960,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 1,
+                "width": 1.5
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1,
+                "width": 2
+            }
+        ]
+    }
+ 
+]

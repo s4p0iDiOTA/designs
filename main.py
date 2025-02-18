@@ -1,33 +1,51 @@
-from container.container_handler import get_optimal_series_container, distribute_serial_containers_in_pages
-from data.models import Series
-from pdfs_handling.pdf_handling import print_album_pages_to_pdf, formato_pdf
-from file_operations.json_files_operations import read_json, validate_json_file
+from containers_handling.container_handler import generate_album_pages 
+from data.data_layer import read_json, validate_json_file
 
 
-# select album
-directory_path = "albums\\_album_sample"
-#test_data= read_json("five_series_of_stamps_samples", directory_path)
-test_data= read_json("Large serie for generating 2 pages", directory_path)
-
-#deserialize config_file
-if validate_json_file("config_file", directory_path): config_file_data = read_json("config_file", directory_path)
+if validate_json_file("content_options"): content_options = read_json("content_options")
 else:  print("JSON file not valid.")
-page_dimensions = formato_pdf[config_file_data["album_page"]["format"]]
-max_container_width= page_dimensions["width"]
-stamp_padding= config_file_data["serial_stamps"]["stamp_padding"]
+if validate_json_file("album_page_layout"): config_file_data = read_json("album_page_layout")
+else:  print("JSON file not valid.")
 
-#Create series and containers
-series= [Series(data) for data in test_data]
-containers = [get_optimal_series_container(s, max_container_width, stamp_padding) for s in series]  
- 
-#Distribute serial containers in sized pages
-album_pages= distribute_serial_containers_in_pages(containers, page_dimensions, horiz_alignment= "uniform", vert_alignment= "middle")
-
-#Print the album pages to a PDF
-print_album_pages_to_pdf(album_pages, "album_pages.pdf")
+generate_album_pages(content_options, config_file_data)  # uses content_options.json and album_page_layout.json
 
 
 
+#_______________________________________________________________________________________________________________
 
+# Add function to orchestrate the album pages creation
+#  - Args: content_options, border_options, paper_options, output_options
+#  - Returns: None
+#  - Get series from the database based on content_options
+#  - Get page border based on border_options and paper_options
+#  - Create series containers and distribute them in pages
+#  - Print the album pages to a PDF with the specified paper_options and output_options
+
+# content_options = {
+    #    "country": "Albania",
+    #    "year_range": [1951, 1960]
+    #}
+    
+    # border_options = {
+    #    "type": "single",
+    #    "color": "black",
+    #}
+    
+    # paper_options = {
+    #    "type": "letter",
+    #    "margins": [
+    #       "top": 0.5,
+    #       "bottom": 0.5,
+    #       "left": 1.5,
+    #       "right": 0.5,],
+    #}
+    
+    # output_options = {
+    #    "file_name": "1951-1960.pdf",
+    #    "path": "my_designs\\albania",
+    #}
+
+
+    
 
 

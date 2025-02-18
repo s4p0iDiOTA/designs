@@ -1,6 +1,6 @@
 import pytest
 import warnings
-from container.container_handler import get_optimal_series_container, get_series_container_min_height
+from containers_handling.container_handler import get_optimal_series_container, get_series_container_min_height
 from data.models import Series, SeriesContainer
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
