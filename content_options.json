@@ -1,0 +1,9 @@
+{
+    "country": "Albania",
+    "year_range": [1951, 1960],
+    "output_options": 
+    {
+        "file_name": "1951_1960.pdf",
+        "path": "my_designs\\albania"
+    }
+}
