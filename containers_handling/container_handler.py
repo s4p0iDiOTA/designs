@@ -258,7 +258,7 @@ def generate_album_pages(content_options, config_file_data):
     directory_path= os.getcwd()        # by now. --> directorio donde van a estar content opt. y page layout
 
     #Create series and containers 
-    series= get_series(content_options: dict, directory_path) 
+    series= get_series(content_options, directory_path) 
     #series= get_series(content_options, directory_path)       # from content_options data file in currrent dir. (rev.)
   
     # create containers list and aligne stamps inside the containers

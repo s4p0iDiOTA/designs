@@ -1,8 +1,11 @@
 import os
+import warnings
 import pytest
 import fitz  # PyMuPDF
-from data.models import Series, SeriesContainer, ContainerRow, StampContainer, Stamp
-from pdfs.pdf_handling import print_to_pdf
+from data.models import Series, SeriesContainer, ContainerRow, StampContainer
+from pdfs_handling.pdf_handling import print_to_pdf
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 @pytest.fixture
 def series_container():
