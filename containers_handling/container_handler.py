@@ -123,28 +123,28 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
 
 # TODO: Add minimum space between series containers, both horizontal and vertical.
 
-def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContainer], page_sizes: str, horiz_alignment: str = "uniform", vert_alignment: str = "middle", vert_padding: float = 0.5) -> list[AlbumPage]:
+def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContainer], working_area: str, horiz_alignment: str = "uniform", vert_alignment: str = "middle", vert_padding: float = 0.5) -> list[AlbumPage]:
     current_x = 0
     current_y = vert_padding
     max_height_on_row = 0
     album_pages = []
 
-    current_page = AlbumPage(page_sizes)
+    current_page = AlbumPage(working_area)
 
     for container in list_of_containers:
         container_width = container.width
         container_height = container.height
 
         # Check if the container fits in the current row. 
-        if current_x + container_width > page_sizes["width"]:   # If it not, move to the next row:
+        if current_x + container_width > working_area["width"]:   # If it not, move to the next row:
             current_x = 0                                          # asumimos que ningun contenedor es mas ancho que la pagina (page_config)
             current_y += max_height_on_row + vert_padding        
             max_height_on_row = 0
 
         # Check if the container fits in the current page
-        if current_y + container_height > page_sizes["height"]: # If it not, add the current page to the album pages and create a new page.      
+        if current_y + container_height > working_area["height"]: # If it not, add the current page to the album pages and create a new page.      
             album_pages.append(current_page)
-            current_page = AlbumPage(page_sizes)
+            current_page = AlbumPage(working_area)
             current_x = 0
             current_y = vert_padding
             max_height_on_row = 0
@@ -159,7 +159,7 @@ def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContain
 
     # Align the containers in each page
     for page in album_pages:
-        horiz_align_containers_in_page(page, page_sizes["width"], horiz_alignment)
+        horiz_align_containers_in_page(page, working_area["width"], horiz_alignment)
 
     # Align the containers vertically within the page.
     for page in album_pages:
@@ -168,7 +168,7 @@ def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContain
     return album_pages
 
 # Align the containers horizontally in each page
-def horiz_align_containers_in_page(page: AlbumPage, work_area_width: float, alignment: str): # alignment can be: "uniform",..pdte
+def horiz_align_containers_in_page(page: AlbumPage, working_area_width, alignment: str): # alignment can be: "uniform",..pdte
     rows = []
     current_row = []
     current_x = 0
@@ -176,7 +176,7 @@ def horiz_align_containers_in_page(page: AlbumPage, work_area_width: float, alig
     max_height_on_row = 0
 
     for x, y, container in page.containers:
-        if current_x + container.width > work_area_width:
+        if current_x + container.width > working_area_width:
             rows.append((current_row, max_height_on_row))
             current_row = []
             current_x = 0
@@ -192,7 +192,7 @@ def horiz_align_containers_in_page(page: AlbumPage, work_area_width: float, alig
     for row, row_height in rows:
         if alignment == "uniform":
             total_width = sum(container.width for _, _, container in row)
-            space = (work_area_width - total_width) / (len(row) + 1)
+            space = (working_area_width - total_width) / (len(row) + 1)
             current_x = space
             for i, (x, y, container) in enumerate(row):
                 new_x = current_x
@@ -236,40 +236,55 @@ def vert_align_containers_in_page(page: AlbumPage, alignment): # alignment can b
             row[i] = (x, new_y, container)
 
     page.containers = [item for row, _ in rows for item in row]
-          
+
+# Generate the border based on border_options and paper_options.          
+def get_page_border(page_size: str) -> dict:
+    page_dimensions = formato_pdf[page_size]
+    return {
+        "x1": 0,
+        "y1": 0,
+        "x2": page_dimensions["width"],
+        "y2": page_dimensions["height"]
+    }
+
+
 # orchestrator
-def generate_album_pages(content_options, config_file_data):  
+def generate_album_pages(content_options, config_file):  
     
     # from album_page_layout file:
-    page_dimensions = formato_pdf[config_file_data["page_options"]["type"]]
-    max_container_width= page_dimensions["width"]
 
-    cont_horiz_alignment= config_file_data["container_settings"]["horizontal_alignment"] 
-    cont_vert_alignment= config_file_data["container_settings"]["vertical_alignment"] 
-    cont_vert_padding= config_file_data["container_settings"]["vertical_paddings"] 
+    paper_sizes = formato_pdf[config_file["paper_options"]["type"]]
+    margin= config_file["paper_options"]["margins"]      
+    page_width= paper_sizes["width"] - margin["left"] - margin["right"]
+    page_height= paper_sizes["height"] - margin["top"] -margin["bottom"]
+    working_area_width= page_width - margin["left"] - margin["right"]
+    working_area_height= page_height - margin["top"] - margin["bottom"]
 
-    stamp_padding= config_file_data["serial_stamps"]["stamp_padding"]
-    stapms_horiz_aligment= config_file_data["serial_stamps"]["horizontal_alignment"]
+    working_area= {"width": working_area_width, "height": working_area_height}
+    max_container_width= working_area_width
+
+    cont_horiz_alignment= config_file["container_settings"]["horizontal_alignment"] 
+    cont_vert_alignment= config_file["container_settings"]["vertical_alignment"] 
+    cont_vert_padding= config_file["container_settings"]["vertical_paddings"] 
+
+    stamp_padding= config_file["serial_stamps"]["stamp_padding"]
+    stapms_horiz_aligment= config_file["serial_stamps"]["horizontal_alignment"]
     
-    # from content options:   
-    output_file_name= content_options["output_options"]["file_name"]  
-    output_file_path= content_options["output_options"]["path"] 
-    
-    directory_path= os.getcwd()        # by now. --> directorio donde van a estar content opt. y page layout
+            # by now. --> directorio donde van a estar content opt. y page layout
+ 
 
     #Create series and containers 
-    series= get_series(content_options, directory_path) 
-    #series= get_series(content_options, directory_path)       # from content_options data file in currrent dir. (rev.)
+    series= get_series(content_options, os.getcwd())   # ver luego donde ubicar content_options.json y album_page_layout.json      
   
     # create containers list and aligne stamps inside the containers
     containers = [get_optimal_series_container(s, max_container_width, stamp_padding) for s in series] 
     align_stamps_in_containers(containers, stapms_horiz_aligment)
     
     #Distribute serial containers in sized pages
-    album_pages= distribute_serial_containers_in_pages(containers, page_dimensions, cont_horiz_alignment, cont_vert_alignment, cont_vert_padding)
+    album_pages= distribute_serial_containers_in_pages(containers, working_area, cont_horiz_alignment, cont_vert_alignment, cont_vert_padding)
 
     #Print the album pages to a PDF
-    print_album_pages_to_pdf(album_pages, output_file_path, output_file_name)
+    print_album_pages_to_pdf(album_pages, config_file, content_options)
 
 
 

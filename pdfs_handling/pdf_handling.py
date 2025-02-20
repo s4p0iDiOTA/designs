@@ -37,31 +37,47 @@ formato_pdf = {
 width, height = formato_pdf["customized"].values()     # seleccionar el formato y ponerlo aqui
 
 
-def print_album_pages_to_pdf(album_pages, output_file_path, output_file_name):
+def print_album_pages_to_pdf(album_pages, config_file, content_options):        # trabajar aqui con el config_file los margenes !!
     new_pdf_document = fitz.open()
 
     for album_page in album_pages:
         page_width = int(album_page.width * 72)  # inches to points
         page_height = int(album_page.height * 72) # inches to points
         new_page = new_pdf_document.new_page(width=page_width, height=page_height)
+      
+        #new_page.show_text("Paper area", fontsize=12, x=10*72, y=10*72)     # x test
+
+        # new_page.show_text(album_page.title, fontsize=12, x=10, y=10)  # title of the page
+        # to print page limits:
+        paper_sizes = formato_pdf[config_file["paper_options"]["type"]]
+        x0= config_file["paper_options"]["margins"]["left"]
+        y0= config_file["paper_options"]["margins"]["top"]
+        x1= paper_sizes["width"] - config_file["paper_options"]["margins"]["right"]
+        y1= paper_sizes["height"] - config_file["paper_options"]["margins"]["bottom"]
+        page_rect = fitz.Rect(x0*72, y0*72, x1*72, y1*72)  # inches to points
+        new_page.draw_rect(page_rect, color=(0, 0, 1), width=1)  # Blue 
+
+
     # to print container:
         for x, y, container in album_page.containers:   
             x0, y0 = x * 72, y * 72  # inches to points
             x1, y1 = (x + container.width) * 72, (y + container.height) * 72  # inches to points
             container_rect = fitz.Rect(x0, y0, x1, y1)
-            new_page.draw_rect(container_rect, color=(0, 0, 1), width=2)  # Blue 
+            new_page.draw_rect(container_rect, color=(0, 1, 0), width=1)  # verde 
     # to print stamps inside the container:       
             for row in container.rows:             
                 for stamp_container in row.stamp_containers:
                     x00, y00, x01, y01 = [coord * 72 for coord in stamp_container.rect]  
                     stamp_rect = fitz.Rect(x00 + x0, y00 + y0, x01 + x0, y01 + y0)
-                    new_page.draw_rect(stamp_rect, color=(1, 0, 0), width=1)  # Red 
+                    new_page.draw_rect(stamp_rect, color=(1, 0, 0), width=2)  # Red 
 
+   #save the pdf in my_designs\country name folder
+    output_file_name= content_options["output_options"]["file_name"]  
+    output_file_path= content_options["output_options"]["path"] 
     try:
         os.mkdir(output_file_path)
     except FileExistsError: pass
-    output_file_name = os.path.join(output_file_path, output_file_name)
-    new_pdf_document.save(output_file_name)
+    new_pdf_document.save(os.path.join(output_file_path, output_file_name))
     new_pdf_document.close()
 
 
@@ -82,16 +98,7 @@ def print_stamps_container_to_pdf(series_container, output_pdf_path):
     new_pdf_document.close()
     
     
-# TODO: Generate the border based on border_options and paper_options.               pdte !!!!!!!!!!!!!!!!
 
-def get_page_border(page_size: str) -> dict:
-    page_dimensions = formato_pdf[page_size]
-    return {
-        "x1": 0,
-        "y1": 0,
-        "x2": page_dimensions["width"],
-        "y2": page_dimensions["height"]
-    }
 
 
 

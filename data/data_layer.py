@@ -15,13 +15,13 @@ import os
 #   - Description: This function retrieves a list of Series objects based on the provided content options. 
 #                  It reads data from a JSON file, validates it, and creates Series objects for each entry in the data.
 
-def get_series(content_options: dict, directory_path: str) -> List[Series]:
+def get_series(content_options: dict, dir_path) -> List[Series]:
     """Returns a list of Series objects based on the provided content options."""
+   
     # Read data from JSON file
-    
-    #data= read_json(content_options, directory_path)
-    with open("./_test_samples/multi_country_series_1950-1960.json", "r") as file:  # resolver!!
-        data = json.load(file)
+    source_file = content_options["input_options"]["json_file_name"]
+    source_file_dir= content_options["input_options"]["path"]
+    data = read_json(source_file, source_file_dir)
 
     # Create Series objects
     series_list = [Series(item) for item in data]
@@ -39,7 +39,7 @@ def read_json(file_name: str, directory_path: str = ""): # current dir by defaul
     # Reads a JSON file from the specified file path and returns its contents as a Python variable.
     # file_path: The path to the JSON file. 
     file_path = os.path.join(directory_path, file_name + ".json")
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, 'r') as file:   #, encoding='utf-8'
         json_data = json.load(file)
     return json_data
 

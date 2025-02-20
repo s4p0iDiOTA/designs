@@ -5,5 +5,10 @@
     {
         "file_name": "1951_1960.pdf",
         "path": "my_designs\\albania"
+    },
+    "input_options": 
+    {
+        "json_file_name": "multi_country_series_1950-1960",
+        "path": "_test_samples"
     }
 }
