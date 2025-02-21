@@ -2,6 +2,12 @@ from containers_handling.container_handler import generate_album_pages
 from data.data_layer import read_json, validate_json_file
 
 
+# call to the function that orchestrate the album pages creation
+#  - Description: This function orchestrates the creation of album pages based on the content_options and the album_page_layout.
+#  - Args: content_options that includes: selection criteries of needed series from an input file and the output path.
+#  - Returns: album_pages file in the specified output path in content_options
+
+
 if validate_json_file("content_options"): content_options = read_json("content_options")
 else:  print("JSON file not valid.")
 if validate_json_file("album_page_layout"): config_file_data = read_json("album_page_layout")

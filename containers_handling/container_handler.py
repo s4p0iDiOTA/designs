@@ -1,6 +1,5 @@
 from data.models import Series, SeriesContainer, ContainerRow, StampContainer, AlbumPage
-from pdfs_handling.pdf_handling import formato_pdf
-from data.data_layer import get_series, read_json, validate_json_file
+from data.data_layer import get_series 
 from pdfs_handling.pdf_handling import print_album_pages_to_pdf, formato_pdf
 import os
 
@@ -55,7 +54,8 @@ def get_series_container_min_height(series: Series, max_width: float, stamp_padd
 
 
 # Finds the container for the stamps in the series with the minimum height and minimum width for that height.
-# Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
+# Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates
+#  to the container and some metadata.
 def get_optimal_series_container(series, max_width, stamp_padding=0.5):
     
     # Do a first run to find the optimal height and initial width.
@@ -123,7 +123,12 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
 
 # TODO: Add minimum space between series containers, both horizontal and vertical.
 
-def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContainer], working_area: str, horiz_alignment: str = "uniform", vert_alignment: str = "middle", vert_padding: float = 0.5) -> list[AlbumPage]:
+def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContainer], working_area: str, container_settings) -> list[AlbumPage]:
+    
+    horiz_alignment= container_settings["horizontal_alignment"] 
+    vert_alignment= container_settings["vertical_alignment"] 
+    vert_padding= container_settings["vertical_paddings"] 
+    
     current_x = 0
     current_y = vert_padding
     max_height_on_row = 0
@@ -135,14 +140,14 @@ def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContain
         container_width = container.width
         container_height = container.height
 
-        # Check if the container fits in the current row. 
-        if current_x + container_width > working_area["width"]:   # If it not, move to the next row:
-            current_x = 0                                          # asumimos que ningun contenedor es mas ancho que la pagina (page_config)
+        # if the container don´t fits in the current row: 
+        if current_x + container_width > working_area["width"]:   # move to the next row:
+            current_x = 0                                          
             current_y += max_height_on_row + vert_padding        
             max_height_on_row = 0
 
-        # Check if the container fits in the current page
-        if current_y + container_height > working_area["height"]: # If it not, add the current page to the album pages and create a new page.      
+        # if the container don´t fits in the current page:
+        if current_y + container_height > working_area["height"]: # add the current page to the album pages and create a new page.      
             album_pages.append(current_page)
             current_page = AlbumPage(working_area)
             current_x = 0
@@ -169,6 +174,7 @@ def distribute_serial_containers_in_pages(list_of_containers: list[SeriesContain
 
 # Align the containers horizontally in each page
 def horiz_align_containers_in_page(page: AlbumPage, working_area_width, alignment: str): # alignment can be: "uniform",..pdte
+     
     rows = []
     current_row = []
     current_x = 0
@@ -225,7 +231,7 @@ def vert_align_containers_in_page(page: AlbumPage, alignment): # alignment can b
 
     for row, row_height in rows:
         for i, (x, y, container) in enumerate(row):
-            if alignment == "top":
+            if alignment == "top":                                
                 new_y = y
             elif alignment == "middle":
                 new_y = y + (row_height - container.height) / 2
@@ -248,31 +254,37 @@ def get_page_border(page_size: str) -> dict:
     }
 
 
-# orchestrator
+# This function orchestrates the creation of album pages based on the content_options and the album_page_layout.
+# Args: - content_options, includes: selection criteries of needed series from an input file and the output path.
+#       - config_file, contains the values of album_page_layout.json file. 
+#                      Includes paper and border options, container settings, serial_stamps and output_options.
+# Returns: album_pages file in the specified output path in content_options
+
+# The funtion does the following:
+#  - Get series from the database based on content_options
+#  - Get page border based on border_options and paper_options
+#  - Create series containers and distribute them in pages
+#  - Print the album pages to a PDF with the specified paper_options and output_options
+
 def generate_album_pages(content_options, config_file):  
     
     # from album_page_layout file:
 
     paper_sizes = formato_pdf[config_file["paper_options"]["type"]]
-    margin= config_file["paper_options"]["margins"]      
-    page_width= paper_sizes["width"] - margin["left"] - margin["right"]
-    page_height= paper_sizes["height"] - margin["top"] -margin["bottom"]
-    working_area_width= page_width - margin["left"] - margin["right"]
-    working_area_height= page_height - margin["top"] - margin["bottom"]
+    margin_settings= config_file["paper_options"]["margins"]      
+    page_width= paper_sizes["width"] - margin_settings["left"] - margin_settings["right"]
+    page_height= paper_sizes["height"] - margin_settings["top"] -margin_settings["bottom"]
+    working_area_width= page_width - margin_settings["left"] - margin_settings["right"]
+    working_area_height= page_height - margin_settings["top"] - margin_settings["bottom"]
 
     working_area= {"width": working_area_width, "height": working_area_height}
     max_container_width= working_area_width
 
-    cont_horiz_alignment= config_file["container_settings"]["horizontal_alignment"] 
-    cont_vert_alignment= config_file["container_settings"]["vertical_alignment"] 
-    cont_vert_padding= config_file["container_settings"]["vertical_paddings"] 
+    container_settings= config_file["container_settings"]
 
     stamp_padding= config_file["serial_stamps"]["stamp_padding"]
     stapms_horiz_aligment= config_file["serial_stamps"]["horizontal_alignment"]
     
-            # by now. --> directorio donde van a estar content opt. y page layout
- 
-
     #Create series and containers 
     series= get_series(content_options, os.getcwd())   # ver luego donde ubicar content_options.json y album_page_layout.json      
   
@@ -280,48 +292,14 @@ def generate_album_pages(content_options, config_file):
     containers = [get_optimal_series_container(s, max_container_width, stamp_padding) for s in series] 
     align_stamps_in_containers(containers, stapms_horiz_aligment)
     
-    #Distribute serial containers in sized pages
-    album_pages= distribute_serial_containers_in_pages(containers, working_area, cont_horiz_alignment, cont_vert_alignment, cont_vert_padding)
-
+    #Distribute serial containers in working_areas of sized pages
+    pages_contents= distribute_serial_containers_in_pages(containers, working_area, container_settings)
+    
     #Print the album pages to a PDF
-    print_album_pages_to_pdf(album_pages, config_file, content_options)
+    print_album_pages_to_pdf(pages_contents, config_file, content_options)
 
 
 
 
 # TODO: Add function for vertical alignment of the containers in the page.    
 
-
-# TODO: Create this function to orchestrate the album pages creation.
-
-# Add function to orchestrate the album pages creation
-#  - Args: content_options, border_options, paper_options, output_options
-#  - Returns: None
-#  - Get series from the database based on content_options
-#  - Get page border based on border_options and paper_options
-#  - Create series containers and distribute them in pages
-#  - Print the album pages to a PDF with the specified paper_options and output_options
-
-# content_options = {
-#    "country": "Albania",
-#    "year_range": [1951, 1960]
-#}
-
-# border_options = {
-#    "type": "single",
-#    "color": "black",
-#}
-
-# paper_options = {
-#    "type": "letter",
-#    "margins": [
-#       "top": 0.5,
-#       "bottom": 0.5,
-#       "left": 1.5,
-#       "right": 0.5,],
-#}
-
-# output_options = {
-#    "file_name": "1951-1960.pdf",
-#    "path": "my_designs\\albania",
-#}

@@ -3,7 +3,7 @@ import warnings
 import pytest
 import fitz  # PyMuPDF
 from data.models import Series, SeriesContainer, ContainerRow, StampContainer
-from pdfs_handling.pdf_handling import print_to_pdf
+from pdfs_handling.pdf_handling1 import print_to_pdf
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
