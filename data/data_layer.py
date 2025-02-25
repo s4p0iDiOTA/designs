@@ -15,7 +15,7 @@ import os
 #   - Description: This function retrieves a list of Series objects based on the provided content options. 
 #                  It reads data from a JSON file, validates it, and creates Series objects for each entry in the data.
 
-def get_series(content_options: dict, dir_path) -> List[Series]:
+def get_series(content_options: dict) -> List[Series]:
     """Returns a list of Series objects based on the provided content options."""
    
     # Read data from JSON file
