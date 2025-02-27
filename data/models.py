@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from pdfs_handling.pdf_handling import formato_pdf
+from data.common import formato_pdf
 import json
 
 class Stamp:
@@ -100,41 +100,51 @@ class SeriesContainer:
         return f"SeriesContainer(height={self.height}, width={self.width}, rows={len(self.rows)})"
 
 
-class WorkSpace:
-    def __init__(self, work_area: str):
-        self.width = work_area.get("width", 0.0)
-        self.height = work_area.get("height", 0.0)
+class WorkSpace:           # permite asignar valores inciales a la clase y luego hacer instancias sin argumento    
+    default_width= None
+    default_height= None 
+    default_margins= None                                      
+    def __init__(self, work_area):
+        if work_area:
+            WorkSpace.default_width= work_area.get("width") 
+            WorkSpace.default_height = work_area.get("height")
+            WorkSpace.default_margins = work_area.get("margins")
+        self.width= self.default_width
+        self.height= self.default_height 
+        self.margins= self.default_margins  
         self.containers = []  # List [x, y, SeriesContainer]
 
     def add_container(self, x: float, y: float, container):
         self.containers.append((x, y, container))
 
-    def get_working_limits(self) -> dict:
+    def get_working_limits(self, page) -> dict:       # returns work area coodinates dict.
+        coor= page.get_page_borders()
+        x01,y01,x02,y02 = coor.values()               # page borders
         return {
-            "x1": AlbumPages.paper_margins["left"] + AlbumPages.working_margins["left"],
-            "y1": AlbumPages.paper_margins["top"] + AlbumPages.working_margins["top"],
-            "x2": AlbumPages.get_page_borders["x2"] - AlbumPages.working_margins["right"],
-            "y2": AlbumPages.get_page_borders["y2"]- AlbumPages.working_margins["bottom"]
-        }
+            "x1": x01 + page.working_margins["left"],       # pdte tomar margins directo de workspace y no de page !
+            "y1": y01 + page.working_margins["top"],
+            "x2": x02 - page.working_margins["right"],
+            "y2": y02 - page.working_margins["bottom"]
+            }
 
-
-class AlbumPages:
+class AlbumPages:                   # los atributos se asignan al inicio, luego se instancian llamadas sin config_file
+    default_config_file=[]
     def __init__(self, config_file: str):
-
-        # the page_area, is all the area inside the paper limited by the borders.
-        # the working_area is the page_area minus the margins between the paper borders and the same working area.
-
+        if config_file:
+            AlbumPages.default_config_file= config_file
+        config_file= AlbumPages.default_config_file
         self.paper_sizes = formato_pdf[config_file["page_options"]["paper_type"]]
         self.paper_margins = config_file["page_options"]["paper_margins"]
-
+        # the page_area, is all the area inside the paper limited by the borders.
+        # the working_area is the page_area minus the margins between the paper borders and the same working area.
         self.page_width = self.paper_sizes["width"] - self.paper_margins["left"] - self.paper_margins["right"]
         self.page_height = self.paper_sizes["height"] - self.paper_margins["top"] - self.paper_margins["bottom"]
 
         self.working_margins = config_file["page_options"]["work_area_margins"]
         self.working_area_width = self.page_width - self.working_margins["left"] - self.working_margins["right"]
         self.working_area_height = self.page_height - self.working_margins["top"] - self.working_margins["bottom"]
-        self.working_area = WorkSpace({"width": self.working_area_width, "height": self.working_area_height})
-
+        self.working_area = WorkSpace({"width": self.working_area_width, "height": self.working_area_height, "margins":self.working_margins})
+          
         self.cont_horiz_pad= config_file["container_settings"]["horizontal_paddings"] 
         self.cont_vert_pad= config_file["container_settings"]["vertical_paddings"]
         self.cont_horiz_algmt= config_file["container_settings"]["horizontal_alignment"]
@@ -155,3 +165,7 @@ class AlbumPages:
             "x2": self.paper_sizes["width"] - self.paper_margins["right"],
             "y2": self.paper_sizes["height"] - self.paper_margins["bottom"]
         }
+
+
+
+

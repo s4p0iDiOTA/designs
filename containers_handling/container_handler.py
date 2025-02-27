@@ -1,12 +1,11 @@
 from data.data_layer import validate_json_file, read_json, get_series
 from data.models import Series, SeriesContainer, ContainerRow, StampContainer, WorkSpace, AlbumPages
-from pdfs_handling.pdf_handling import print_album_pages_to_pdf
-
+from pdfs_handling.pdf_handling import put_containers_boxes_in_pdf_pages, configure_album_pages_to_print
 
 
 # Finds the container for the stamps in the series that has the minimum height within a given width.
 # Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
-def get_series_container_min_height(series: Series, max_width, stamp_padding, non_inclusive_max_width: bool = False) -> SeriesContainer:
+def get_series_container_min_height(series: Series, max_width: float, stamp_padding, non_inclusive_max_width: bool = False) -> SeriesContainer:
     series_container = SeriesContainer()
     current_row = ContainerRow()
 
@@ -79,7 +78,7 @@ def get_optimal_series_container(series, max_width, stamp_padding):
     return smallest_container
 
 # the smallest containers needs to be aligned
-def align_stamps_in_containers(containers, alignment):  ?
+def align_stamps_in_containers(containers, alignment):  
     for container in containers:
         # Adjust the position of the stamps in the horizontal direction
         horiz_stamps_alignment(container, alignment)    
@@ -128,13 +127,13 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
 # the containers are stored in a box. A box can store as many containers as they can be horizontally fitted in one row. 
 def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[WorkSpace]:
     
-    album_page= AlbumPages()
-    working_area= WorkSpace()
-    working_area.get_working_borders()
-    ##y0= working_area["y0"]
-    ##x1= working_area["x1"]
-    ##y1= working_area["y1"]
-    x0,y0,x1,y1 = [i for i in working_area["i"]]            # probar
+    album_page= AlbumPages(None)
+    ##working_area= WorkSpace(None)
+    current_box= WorkSpace(None)
+
+    ##coor=working_area.get_working_limits(album_page)
+    coor=current_box.get_working_limits(album_page)
+    x0,y0,x1,y1 = coor.values()
 
     cont_horiz_pad = album_page.cont_horiz_pad
     cont_vert_pad = album_page.cont_vert_pad
@@ -144,7 +143,7 @@ def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[Wor
     max_height_on_row = 0
     container_box = []
 
-    current_box = WorkSpace(working_area)
+    ##current_box = working_area
 
     for container in list_of_containers:
         container_width = container.width              ### no recuerdo pq ??. rev.
@@ -159,7 +158,7 @@ def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[Wor
         # if the container don´t fits in the current page:
         if current_y + container_height > current_box.height:   # add the current page to the album pages and create a new page.      
             container_box.append(current_box)
-            current_box = WorkSpace(working_area)
+            ##current_box = WorkSpace
             current_x = 0
             current_y = y0
             max_height_on_row = 0
@@ -189,14 +188,14 @@ def horiz_align_containers_inside_the_boxes( box: WorkSpace ): # alignment can b
     current_row = []
     current_x = current_y = 0
     max_height_on_row = 0
-    page= AlbumPages()
-    cont_horiz_pad = box.cont_horiz_pad
+    page= AlbumPages(None)
+    cont_horiz_pad = page.cont_horiz_pad
 
     coor=page.get_page_borders()
-    x0,y0,x1,y1 = [i for i in coor["i"]]
+    x0,y0,x1,y1 = coor.values()
 
     for x, y, container in box.containers:
-        if current_x + container.width + cont_horiz_pad *2 > box.working_area.width:
+        if current_x + container.width + cont_horiz_pad *2 > box.width:
             rows.append((current_row, max_height_on_row))
             current_row = []
             current_x = 0
@@ -230,8 +229,8 @@ def vert_align_containers_in_working_areas( box: WorkSpace ): # alignment can be
     current_row = []
     current_y = 0
     max_height_on_row = 0
-    page= AlbumPages()
-    cont_vert_algmt = page.cont_vert_pad
+    page= AlbumPages(None)
+    cont_vert_algmt = page.cont_vert_algmt
 
     for x, y, container in box.containers:
         if current_y + container.height > box.height:
@@ -286,43 +285,28 @@ def generate_album_pages():
     
     #Create  series from data source based on the provided content options.  
     series= get_series(content_options)       
- 
-    # create one or more containers of series aligning the stamps inside the containers
+    
+    # Distribute stamp series in containers of optimum sizes
     max_width= album_pages.max_container_width
     stamp_padding= album_pages.stamp_padding
-    containers = [get_optimal_series_container(serie, max_width, stamp_padding) for serie in series] 
-    align_stamps_in_containers(containers)
+    containers = [get_optimal_series_container(serie, max_width, stamp_padding) for serie in series]
+    # Align the stamps inside the containers 
+    alignment = album_pages.stamps_horiz_alignment
+    align_stamps_in_containers(containers, alignment)
     
-    #Distribute serial containers in working_areas of sized pages. Return containers organized in one or more boxes. 
+    #Distribute containers in working_areas of sized pages, returning containers organized
+    # across the width and height of the area. 
     container_boxes= distribute_containers(containers)
     
     #Print the album pages to a PDF
-    print_album_pages_to_pdf(container_boxes, content_options)  ## rev
-    ##print_album_pages_to_pdf(album_pages)  !
+    put_containers_boxes_in_pdf_pages(container_boxes, content_options)    # the output pdf file defined in config_file
+    ##configure_album_pages_to_print(container_boxes, config_file, content_options) 
+
 
 
 
   
-    """
-    # from album_page_layout file:
 
-    paper_sizes = formato_pdf[config_file["page_options"]["paper_type"]]
-    paper_margins= config_file["page_options"]["paper_margins"]      
-    page_width= paper_sizes["width"] - paper_margins["left"] - paper_margins["right"]
-    page_height= paper_sizes["height"] - paper_margins["top"] -paper_margins["bottom"]
+
     
-
-    # the working area is all the area inside the paper limited by the borders (page area)
-    #  minus the margins setted to the working areas.
-    working_margins=config_file["page_options"]["work_area_margins"]
-    working_area_width =(page_width - working_margins["left"] - working_margins["right"])
-    working_area_height = (page_height - working_margins["top"] - working_margins["bottom"])
-    working_area= WorkSpace({"width": working_area_width, "height": working_area_height})
-    
-    max_container_width= working_area.width
-
-    #stamp_padding= config_file["serial_stamps"]["stamp_padding"]
-    #stapms_horiz_aligment= config_file["serial_stamps"]["horizontal_alignment"]
-    """
-       
 
