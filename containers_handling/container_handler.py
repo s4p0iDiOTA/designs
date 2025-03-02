@@ -1,6 +1,6 @@
 from data.data_layer import validate_json_file, read_json, get_series
 from data.models import Series, SeriesContainer, ContainerRow, StampContainer, WorkSpace, AlbumPages
-from pdfs_handling.pdf_handling import put_containers_boxes_in_pdf_pages, configure_album_pages_to_print
+from pdfs_handling.pdf_handling import put_containers_boxes_in_pdf_pages, conform_album_pages
 
 
 # Finds the container for the stamps in the series that has the minimum height within a given width.
@@ -128,10 +128,8 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
 def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[WorkSpace]:
     
     album_page= AlbumPages(None)
-    ##working_area= WorkSpace(None)
     current_box= WorkSpace(None)
 
-    ##coor=working_area.get_working_limits(album_page)
     coor=current_box.get_working_limits(album_page)
     x0,y0,x1,y1 = coor.values()
 
@@ -142,8 +140,6 @@ def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[Wor
     current_y = y1    
     max_height_on_row = 0
     container_box = []
-
-    ##current_box = working_area
 
     for container in list_of_containers:
         container_width = container.width              ### no recuerdo pq ??. rev.
@@ -158,7 +154,6 @@ def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[Wor
         # if the container don´t fits in the current page:
         if current_y + container_height > current_box.height:   # add the current page to the album pages and create a new page.      
             container_box.append(current_box)
-            ##current_box = WorkSpace
             current_x = 0
             current_y = y0
             max_height_on_row = 0
@@ -176,7 +171,7 @@ def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[Wor
         horiz_align_containers_inside_the_boxes(box)
 
     # Align the boxes vertically within the work area
-    for container in container_box:
+    for box in container_box:
         vert_align_containers_in_working_areas(box)           
 
     return container_box
@@ -299,8 +294,9 @@ def generate_album_pages():
     container_boxes= distribute_containers(containers)
     
     #Print the album pages to a PDF
-    put_containers_boxes_in_pdf_pages(container_boxes, content_options)    # the output pdf file defined in config_file
-    ##configure_album_pages_to_print(container_boxes, config_file, content_options) 
+    document= put_containers_boxes_in_pdf_pages(container_boxes)  
+    conform_album_pages(document, content_options) 
+
 
 
 

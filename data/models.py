@@ -133,12 +133,14 @@ class AlbumPages:                   # los atributos se asignan al inicio, luego 
         if config_file:
             AlbumPages.default_config_file= config_file
         config_file= AlbumPages.default_config_file
+        
         self.paper_sizes = formato_pdf[config_file["page_options"]["paper_type"]]
-        self.paper_margins = config_file["page_options"]["paper_margins"]
         # the page_area, is all the area inside the paper limited by the borders.
         # the working_area is the page_area minus the margins between the paper borders and the same working area.
-        self.page_width = self.paper_sizes["width"] - self.paper_margins["left"] - self.paper_margins["right"]
-        self.page_height = self.paper_sizes["height"] - self.paper_margins["top"] - self.paper_margins["bottom"]
+        self.page_margins = config_file["page_options"]["page_margins"]
+        self.page_borders= config_file["page_options"]["page_borders"]
+        self.page_width = self.paper_sizes["width"] - self.page_margins["left"] - self.page_margins["right"]
+        self.page_height = self.paper_sizes["height"] - self.page_margins["top"] - self.page_margins["bottom"]
 
         self.working_margins = config_file["page_options"]["work_area_margins"]
         self.working_area_width = self.page_width - self.working_margins["left"] - self.working_margins["right"]
@@ -160,10 +162,10 @@ class AlbumPages:                   # los atributos se asignan al inicio, luego 
      # Get the border based on border_options and paper_options.         
     def get_page_borders(self) -> dict:
         return {
-            "x1": self.paper_margins["left"],
-            "y1": self.paper_margins["top"],
-            "x2": self.paper_sizes["width"] - self.paper_margins["right"],
-            "y2": self.paper_sizes["height"] - self.paper_margins["bottom"]
+            "x1": self.page_margins["left"],
+            "y1": self.page_margins["top"],
+            "x2": self.paper_sizes["width"] - self.page_margins["right"],
+            "y2": self.paper_sizes["height"] - self.page_margins["bottom"]
         }
 
 
