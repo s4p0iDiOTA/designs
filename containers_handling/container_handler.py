@@ -128,9 +128,9 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
 def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[WorkSpace]:
     
     album_page= AlbumPages(None)
-    current_box= WorkSpace(None)
+    box= WorkSpace(None)
 
-    coor=current_box.get_working_limits(album_page)
+    coor=WorkSpace.get_working_limits(None)
     x0,y0,x1,y1 = coor.values()
 
     cont_horiz_pad = album_page.cont_horiz_pad
@@ -139,42 +139,40 @@ def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[Wor
     current_x = 0
     current_y = y1    
     max_height_on_row = 0
-    container_box = []
+    list_of_boxes = []
 
     for container in list_of_containers:
-        container_width = container.width              ### no recuerdo pq ??. rev.
-        container_height = container.height
 
         # if the container don´t fits in the current row: 
-        if current_x + container_width + cont_horiz_pad*2 > current_box.width:    # move to the next row:
+        if current_x + container.width + cont_horiz_pad * 2 > x1:    # move to the next row:
             current_x = 0                                          
             current_y += max_height_on_row + cont_vert_pad       
             max_height_on_row = 0
 
         # if the container don´t fits in the current page:
-        if current_y + container_height > current_box.height:   # add the current page to the album pages and create a new page.      
-            container_box.append(current_box)
+        if current_y + container.height > y1:   # add the current page to the album pages and create a new page.      
+            list_of_boxes.append(box)
             current_x = 0
             current_y = y0
             max_height_on_row = 0
 
-        # Add the container to the current workspace
-        current_box.add_container(current_x, current_y, container)
-        current_x += container_width
-        max_height_on_row = max(max_height_on_row, container_height)
+        box.add_container(current_x, current_y, container)
+        current_x += container.width
+        max_height_on_row = max(max_height_on_row, container.height)
 
-    # Add the last container or container set in a box
-    container_box.append(current_box)
+    # Add the last container or container set in a container box
+    list_of_boxes.append(box)
 
     # Align the containers in boxes
-    for box in container_box:
+    for box in list_of_boxes:
         horiz_align_containers_inside_the_boxes(box)
 
     # Align the boxes vertically within the work area
-    for box in container_box:
+    for box in list_of_boxes:
         vert_align_containers_in_working_areas(box)           
 
-    return container_box
+    return list_of_boxes
+
 
 # Align the containers horizontally 
 def horiz_align_containers_inside_the_boxes( box: WorkSpace ): # alignment can be: "uniform",..pdte

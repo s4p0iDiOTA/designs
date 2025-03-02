@@ -102,22 +102,20 @@ class SeriesContainer:
 
 class WorkSpace:           # permite asignar valores inciales a la clase y luego hacer instancias sin argumento    
     default_width= None
-    default_height= None 
-    default_margins= None                                      
+    default_height= None                                       
     def __init__(self, work_area):
         if work_area:
             WorkSpace.default_width= work_area.get("width") 
             WorkSpace.default_height = work_area.get("height")
-            WorkSpace.default_margins = work_area.get("margins")
         self.width= self.default_width
-        self.height= self.default_height 
-        self.margins= self.default_margins  
+        self.height= self.default_height  
         self.containers = []  # List [x, y, SeriesContainer]
 
     def add_container(self, x: float, y: float, container):
         self.containers.append((x, y, container))
 
-    def get_working_limits(self, page) -> dict:       # returns work area coodinates dict.
+    def get_working_limits(self) -> dict:       # returns the working area coodinates of the page
+        page=AlbumPages(None)
         coor= page.get_page_borders()
         x01,y01,x02,y02 = coor.values()               # page borders
         return {
