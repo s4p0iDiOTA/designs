@@ -111,7 +111,7 @@ def horiz_stamps_alignment(series_container: SeriesContainer, alignment) -> Seri
                 pass
     return series_container
 
-# Adjust  Y position of the stamps on the rows
+# Adjust  Y position of the stamps on the rows.
 def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer: 
     for row in series_container.rows:
         for stamp_container in row.stamp_containers:
@@ -119,63 +119,50 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
             stamp_container.rect[1] += diff  # y1 (initial pos of the stamp)
             stamp_container.rect[3] += diff  # y3 (height)
     return series_container
+ 
+def distribute_containers(series_containers_list: list[SeriesContainer]) -> list[WorkSpace]:
+    # Distributes as many series_containers as the working area can fit. 
 
-
-# TODO: Add minimum space between series containers, both horizontal and vertical.
-
-# Distributes as many containers as the working area can fit. Then aligns them respect to the page borders.
-# the containers are stored in a box. A box can store as many containers as they can be horizontally fitted in one row. 
-def distribute_containers(list_of_containers: list[SeriesContainer]) -> list[WorkSpace]:
-    
     album_page= AlbumPages(None)
     box= WorkSpace(None)
 
+    # working space limits
     coor=WorkSpace.get_working_limits(None)
     x0,y0,x1,y1 = coor.values()
 
-    cont_horiz_pad = album_page.cont_horiz_pad
-    cont_vert_pad = album_page.cont_vert_pad
-
-    current_x = 0
-    current_y = y1    
+    current_x = x0              # working_area left side
+    current_y = y0              # working_area top
     max_height_on_row = 0
-    list_of_boxes = []
+    horiz_pad = album_page.cont_horiz_pad
+    vert_pad = album_page.cont_vert_pad
 
-    for container in list_of_containers:
+    for series_containers in series_containers_list:
 
-        # if the container don´t fits in the current row: 
-        if current_x + container.width + cont_horiz_pad * 2 > x1:    # move to the next row:
-            current_x = 0                                          
-            current_y += max_height_on_row + cont_vert_pad       
+        # if the next container don´t fits horizontally in the work_area:
+        if current_x + series_containers.width + horiz_pad * 2 > x1:  # move down
+            current_x = x0                                          
+            current_y += max_height_on_row + vert_pad       
             max_height_on_row = 0
 
-        # if the container don´t fits in the current page:
-        if current_y + container.height > y1:   # add the current page to the album pages and create a new page.      
-            list_of_boxes.append(box)
-            current_x = 0
+        # if the container don´t fits down, change to a new work_area
+        if current_y + series_containers.height > y1:  
+            current_x = x0
             current_y = y0
             max_height_on_row = 0
 
-        box.add_container(current_x, current_y, container)
-        current_x += container.width
-        max_height_on_row = max(max_height_on_row, container.height)
+        current_x += horiz_pad if current_x == x0 else horiz_pad 
+        series_containers.ini_coord= [current_x, current_y]
+        current_x += series_containers.width
+        max_height_on_row = max(max_height_on_row, series_containers.height)
 
-    # Add the last container or container set in a container box
-    list_of_boxes.append(box)
+    # Align the series_containers in the work area
+  ###  horiz_alignment(series_containers_list)
+  ###  vert_alignment(series_containers_list)
 
-    # Align the containers in boxes
-    for box in list_of_boxes:
-        horiz_align_containers_inside_the_boxes(box)
-
-    # Align the boxes vertically within the work area
-    for box in list_of_boxes:
-        vert_align_containers_in_working_areas(box)           
-
-    return list_of_boxes
+    return series_containers_list
 
 
-# Align the containers horizontally 
-def horiz_align_containers_inside_the_boxes( box: WorkSpace ): # alignment can be: "uniform",..pdte
+def horiz_alignment(series_containers_list): # alignment can be: "uniform",..pdte
 
     rows = []
     current_row = []
@@ -187,19 +174,10 @@ def horiz_align_containers_inside_the_boxes( box: WorkSpace ): # alignment can b
     coor=page.get_page_borders()
     x0,y0,x1,y1 = coor.values()
 
-    for x, y, container in box.containers:
-        if current_x + container.width + cont_horiz_pad *2 > box.width:
-            rows.append((current_row, max_height_on_row))
-            current_row = []
-            current_x = 0
-            current_y += max_height_on_row
-            max_height_on_row = 0
+    box=WorkSpace(None)
+    box_width=0
 
-        current_row.append((x, y, container))
-        current_x += container.width
-        max_height_on_row = max(max_height_on_row, container.height)
-
-    rows.append((current_row, max_height_on_row))
+   # for series_containers in series_containers_list
 
     
     for row, row_height in rows:
@@ -215,15 +193,12 @@ def horiz_align_containers_inside_the_boxes( box: WorkSpace ): # alignment can b
 
     box.containers = [item for row, _ in rows for item in row]
 
-
-# Align the containers vertically within the page.
-def vert_align_containers_in_working_areas( box: WorkSpace ): # alignment can be: "top", "middle", or "bottom". 
+def vert_alignment(series_containers_list): # alignment can be: "top", "middle", or "bottom". 
     rows = []
     current_row = []
     current_y = 0
     max_height_on_row = 0
     page= AlbumPages(None)
-    cont_vert_algmt = page.cont_vert_algmt
 
     for x, y, container in box.containers:
         if current_y + container.height > box.height:
@@ -240,11 +215,11 @@ def vert_align_containers_in_working_areas( box: WorkSpace ): # alignment can be
 
     for row, row_height in rows:
         for i, (x, y, container) in enumerate(row):
-            if cont_vert_algmt == "top":                                
+            if page.cont_vert_algmt == "top":                                
                 new_y = y
-            elif cont_vert_algmt == "middle":
+            elif page.cont_vert_algmt == "middle":
                 new_y = y + (row_height - container.height) / 2
-            elif cont_vert_algmt == "bottom":
+            elif page.cont_vert_algmt == "bottom":
                 new_y = y + (row_height - container.height)
             else:
                 raise ValueError("Invalid alignment type. Choose from 'top', 'middle', or 'bottom'.")
@@ -276,31 +251,25 @@ def generate_album_pages():
     # Create an AlbumPages object
     album_pages = AlbumPages(config_file)
     
-    #Create  series from data source based on the provided content options.  
+    # Get stamp series from data source based on the provided content options.  
     series= get_series(content_options)       
     
-    # Distribute stamp series in containers of optimum sizes
+    # Distribute stamp series in rows inside the containers of optimized dimensions within the work area.
     max_width= album_pages.max_container_width
     stamp_padding= album_pages.stamp_padding
-    containers = [get_optimal_series_container(serie, max_width, stamp_padding) for serie in series]
-    # Align the stamps inside the containers 
+    series_containers_list = [get_optimal_series_container(serie, max_width, stamp_padding) for serie in series]
+
+    # Align the stamps inside the series_containers.The stamp coordinates are set to the same vert. level by rows.
+    # and aligned horizontally. 
     alignment = album_pages.stamps_horiz_alignment
-    align_stamps_in_containers(containers, alignment)
+    align_stamps_in_containers(series_containers_list, alignment)
     
     #Distribute containers in working_areas of sized pages, returning containers organized
     # across the width and height of the area. 
-    container_boxes= distribute_containers(containers)
+    containers_box= distribute_containers(series_containers_list)
     
     #Print the album pages to a PDF
-    document= put_containers_boxes_in_pdf_pages(container_boxes)  
+    document= put_containers_boxes_in_pdf_pages(containers_box)  
     conform_album_pages(document, content_options) 
 
-
-
-
-
-  
-
-
-    
 

@@ -7,7 +7,7 @@ width, height = formato_pdf["customized"].values()  # define in album_page_layou
 
 
 # create a pdf document. Locates serial containers in the pdf pages.
-def put_containers_boxes_in_pdf_pages(container_boxes):
+def put_containers_boxes_in_pdf_pages(containers_box):
     # open a new pdf document for storing the stamp containers.
     pdf_document = fitz.open()
            
@@ -19,30 +19,31 @@ def put_containers_boxes_in_pdf_pages(container_boxes):
     x_0 = x_1 = y_0 = y_1 = 0  # tmp.... resolver ajuste de coordenadas para ubicar el working page
     last_y_pos = 0
 
-    # locate boxes in pages. In one page might be located one or more boxes
-    for _index, box in enumerate(container_boxes):      
+    for serials_containers in containers_box:
+        # locate boxes in pages. In one page might be located one or more boxes
+        for _index, serial_container in enumerate(serials_containers):      ???????????????????? cambiar 
 
-        # to save position of containers in pages
-        for j,(x, y, container) in enumerate(box.containers):
-            x0, y0 = (x_0 + x) * 72, (y_0 + y) * 72
-            x1, y1 = (x_1 + x + container.width) * 72, (y_1 + y + container.height) * 72
-            container_rect = fitz.Rect(x0, y0, x1, y1)
-            pdf_page.draw_rect(container_rect, fill=(.8, .8, .8), fill_opacity=0.1)  # limites del contenedor. temporal!!!!
-            
-            # to put stamps inside the containers:
-            for row in container.rows:
-                for stamp_container in row.stamp_containers:
-                    x00, y00, x01, y01 = [coord * 72 for coord in stamp_container.rect]
-                    stamp_rect = fitz.Rect(x00 + x0, y00 + y0, x01 + x0, y01 + y0)
-                    pdf_page.draw_rect(stamp_rect, fill=(0, 0, .8), fill_opacity=0.1, color=(1, 0, 0), stroke_opacity=0.2, width=1)
-                    # working_area.draw_rect(stamp_rect, color=(0, 0, 0), width=1)
+            # to save position of containers in pages
+            for j,(x, y, serial_container) in enumerate(serial_containers):
+                x0, y0 = (x_0 + x) * 72, (y_0 + y) * 72
+                x1, y1 = (x_1 + x + serial_container.width) * 72, (y_1 + y + serial_container.height) * 72
+                container_rect = fitz.Rect(x0, y0, x1, y1)
+                pdf_page.draw_rect(container_rect, fill=(.8, .8, .8), fill_opacity=0.1)  # limites del contenedor. temporal!!!!
+                
+                # to put stamps inside the containers:
+                for row in serial_container.rows:
+                    for stamp_container in row.stamp_containers:
+                        x00, y00, x01, y01 = [coord * 72 for coord in stamp_container.rect]
+                        stamp_rect = fitz.Rect(x00 + x0, y00 + y0, x01 + x0, y01 + y0)
+                        pdf_page.draw_rect(stamp_rect, fill=(0, 0, .8), fill_opacity=0.1, color=(1, 0, 0), stroke_opacity=0.2, width=1)
+                        # working_area.draw_rect(stamp_rect, color=(0, 0, 0), width=1)
 
-            # at the end of the page, save it to the pdf_document and create another page if there is another box.
-            if _index != len(container_boxes)-1 and not (y >= last_y_pos) : # (para excl last_pos=0)
-                #pdf_document.insert_page(-1, pdf_page)
-                pdf_page = pdf_document.new_page(width=album_page.paper_sizes["width"] * 72, height=album_page.paper_sizes["height"] * 72)          
-                _index += 1           
-            last_y_pos = y  
+                # at the end of the page, save it to the pdf_document and create another page if there is another box.
+                if _index != len(serials_containers)-1 and not (y >= last_y_pos) : # (para excl last_pos=0)
+                    #pdf_document.insert_page(-1, pdf_page)
+                    pdf_page = pdf_document.new_page(width=album_page.paper_sizes["width"] * 72, height=album_page.paper_sizes["height"] * 72)          
+                    _index += 1           
+                last_y_pos = y  
     
     return pdf_document
  

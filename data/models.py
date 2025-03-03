@@ -83,9 +83,10 @@ class ContainerRow:
         return f"ContainerRow(height={self.height}, width={self.width}, stamp_containers={len(self.stamp_containers)})"
 
 class SeriesContainer:
-    def __init__(self) -> None:
+    def __init__(self, coord: List[float] = None) -> None:
         self.height: float = 0.0
         self.width: float = 0.0
+        self.ini_coord: List[float] = coord if coord else [0.0, 0.0]
         self.rows: List[ContainerRow] = []
 
     def to_dict(self) -> Dict[str, Any]:
@@ -109,10 +110,10 @@ class WorkSpace:           # permite asignar valores inciales a la clase y luego
             WorkSpace.default_height = work_area.get("height")
         self.width= self.default_width
         self.height= self.default_height  
-        self.containers = []  # List [x, y, SeriesContainer]
+        self.box_of_containers = []  # List [x, y, list of containers in the same row]
 
     def add_container(self, x: float, y: float, container):
-        self.containers.append((x, y, container))
+        self.box.append((x, y, container))
 
     def get_working_limits(self) -> dict:       # returns the working area coodinates of the page
         page=AlbumPages(None)
