@@ -120,13 +120,13 @@ class WorkSpace:           # permite asignar valores inciales a la clase y luego
         coor= page.get_page_borders()
         x01,y01,x02,y02 = coor.values()               # page borders
         return {
-            "x1": x01 + page.working_margins["left"],       # pdte tomar margins directo de workspace y no de page !
+            "x1": x01 + page.working_margins["left"],       
             "y1": y01 + page.working_margins["top"],
             "x2": x02 - page.working_margins["right"],
             "y2": y02 - page.working_margins["bottom"]
             }
 
-class AlbumPages:                   # los atributos se asignan al inicio, luego se instancian llamadas sin config_file
+class AlbumPages:                 
     default_config_file=[]
     def __init__(self, config_file: str):
         if config_file:
@@ -155,8 +155,6 @@ class AlbumPages:                   # los atributos se asignan al inicio, luego 
 
         self.stamp_padding = config_file["serial_stamps"]["stamp_padding"]
         self.stamps_horiz_alignment = config_file["serial_stamps"]["horizontal_alignment"]
-
-     #   self.container_boxes:List[container_boxes] = []  # List [x, y, Container_box]
 
      # Get the border based on border_options and paper_options.         
     def get_page_borders(self) -> dict:

@@ -1,6 +1,6 @@
 from data.data_layer import validate_json_file, read_json, get_series
 from data.models import Series, SeriesContainer, ContainerRow, StampContainer, WorkSpace, AlbumPages
-from pdfs_handling.pdf_handling import put_containers_boxes_in_pdf_pages, conform_album_pages
+from pdfs_handling.pdf_handling import put_containers_in_pdf_pages, conform_album_pages
 
 
 # Finds the container for the stamps in the series that has the minimum height within a given width.
@@ -120,7 +120,7 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
             stamp_container.rect[3] += diff  # y3 (height)
     return series_container
  
-def distribute_containers(series_containers_list: list[SeriesContainer]) -> list[WorkSpace]:
+def distribute_containers(series__containers: list[SeriesContainer]) -> list[WorkSpace]:
     # Distributes as many series_containers as the working area can fit. 
 
     album_page= AlbumPages(None)
@@ -136,7 +136,7 @@ def distribute_containers(series_containers_list: list[SeriesContainer]) -> list
     horiz_pad = album_page.cont_horiz_pad
     vert_pad = album_page.cont_vert_pad
 
-    for series_containers in series_containers_list:
+    for series_containers in series__containers:
 
         # if the next container don´t fits horizontally in the work_area:
         if current_x + series_containers.width + horiz_pad * 2 > x1:  # move down
@@ -155,45 +155,69 @@ def distribute_containers(series_containers_list: list[SeriesContainer]) -> list
         current_x += series_containers.width
         max_height_on_row = max(max_height_on_row, series_containers.height)
 
-    # Align the series_containers in the work area
-  ###  horiz_alignment(series_containers_list)
-  ###  vert_alignment(series_containers_list)
+    # Align the series_containers in the work area:
 
-    return series_containers_list
+#  horiz_alignment(series__containers)
+#  vert_alignment(series_containers_list)
 
+    return series__containers
 
-def horiz_alignment(series_containers_list): # alignment can be: "uniform",..pdte
+def horiz_alignment(series__containers: list[SeriesContainer]):
 
-    rows = []
-    current_row = []
-    current_x = current_y = 0
-    max_height_on_row = 0
-    page= AlbumPages(None)
-    cont_horiz_pad = page.cont_horiz_pad
+    # Group containers by their y-coordinate (ini_coord[1])
+    rows = {}
+    last_y_coord= 0
+    ord = 0
+    for container in series__containers:
+        y_coord = container.ini_coord[1]
+        if (ord,y_coord) not in rows: #and not (y_coord >= last_y_coord): # ??? todavia.. no puedo dejar la misma llave
+            ord += 1
+            rows[(ord, y_coord)] = []        
+        rows[(ord, y_coord)].append(container)
 
-    coor=page.get_page_borders()
-    x0,y0,x1,y1 = coor.values()
+    page = AlbumPages(None)
+    horiz_pad = page.cont_horiz_pad
+    alignment = page.cont_horiz_algmt
 
-    box=WorkSpace(None)
-    box_width=0
+    for y_coord, row in rows.items():
+        total_width = sum(container.width for container in row)
+        available_width = page.page_width - 2 * horiz_pad
 
-   # for series_containers in series_containers_list
-
-    
-    for row, row_height in rows:
-        if page.cont_horiz_algmt == "uniform":
-            total_width = sum(container.width for _, _, container in row)
-            space = (box.width - total_width) / (len(row) + 1)
-            current_x = y0 + space 
-            for i, (x, y, container) in enumerate(row):
-                new_x = current_x
-                new_y = y + (row_height - container.height)
-                row[i] = (new_x, new_y, container)
+        if alignment == "uniform":               #containers are spaced uniformly 
+            space = (available_width - total_width) / (len(row) + 1)
+            current_x = horiz_pad + space
+            for container in row:
+                container.ini_coord[0] = current_x
                 current_x += container.width + space
+        elif alignment == "justify":      #containers are spaced to fill the available width, with equal space between them.
+            if len(row) > 1:
+                space = (available_width - total_width) / (len(row) - 1)
+                current_x = horiz_pad
+                for container in row:
+                    container.ini_coord[0] = current_x
+                    current_x += container.width + space
+            else:
+                container.ini_coord[0] = (available_width - total_width) / 2 + horiz_pad
+        elif alignment == "center":          # containers are centered within the available width.
+            current_x = (available_width - total_width) / 2 + horiz_pad
+            for container in row:
+                container.ini_coord[0] = current_x
+                current_x += container.width
+        elif alignment == "right":          #containers are aligned to the right within the available width.
+            current_x = available_width - total_width + horiz_pad
+            for container in row:
+                container.ini_coord[0] = current_x
+                current_x += container.width
+        elif alignment == "left":           #containers are aligned to the left within the available width.
+            current_x = horiz_pad
+            for container in row:
+                container.ini_coord[0] = current_x
+                current_x += container.width
 
-    box.containers = [item for row, _ in rows for item in row]
+    return series__containers
 
-def vert_alignment(series_containers_list): # alignment can be: "top", "middle", or "bottom". 
+
+def vert_alignment(series_containers_list: list[SeriesContainer]): # alignment can be: "top", "middle", or "bottom". 
     rows = []
     current_row = []
     current_y = 0
@@ -257,19 +281,19 @@ def generate_album_pages():
     # Distribute stamp series in rows inside the containers of optimized dimensions within the work area.
     max_width= album_pages.max_container_width
     stamp_padding= album_pages.stamp_padding
-    series_containers_list = [get_optimal_series_container(serie, max_width, stamp_padding) for serie in series]
+    series__containers = [get_optimal_series_container(serie, max_width, stamp_padding) for serie in series]
 
     # Align the stamps inside the series_containers.The stamp coordinates are set to the same vert. level by rows.
     # and aligned horizontally. 
     alignment = album_pages.stamps_horiz_alignment
-    align_stamps_in_containers(series_containers_list, alignment)
+    align_stamps_in_containers(series__containers, alignment)
     
     #Distribute containers in working_areas of sized pages, returning containers organized
     # across the width and height of the area. 
-    containers_box= distribute_containers(series_containers_list)
+    distribute_containers(series__containers)
     
     #Print the album pages to a PDF
-    document= put_containers_boxes_in_pdf_pages(containers_box)  
+    document= put_containers_in_pdf_pages(series__containers)  
     conform_album_pages(document, content_options) 
 
 

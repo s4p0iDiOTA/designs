@@ -1,57 +1,54 @@
 import fitz  # PyMuPDF
-from data.common import formato_pdf
-from data.models import AlbumPages
+from data.models import SeriesContainer, AlbumPages
 import os
 
-width, height = formato_pdf["customized"].values()  # define in album_page_layout. By default "customized"
-
-
 # create a pdf document. Locates serial containers in the pdf pages.
-def put_containers_boxes_in_pdf_pages(containers_box):
+def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):
     # open a new pdf document for storing the stamp containers.
     pdf_document = fitz.open()
            
     # create a pdf_page object with the album_pages paper size. It is not added automatically to the document.
-    album_page = AlbumPages(None) 
-    #pdf_page=fitz.Page
-    pdf_page = pdf_document.new_page(width=album_page.paper_sizes["width"] * 72, height=album_page.paper_sizes["height"] * 72)
+    album_page = AlbumPages(None)
+    pg_width= album_page.paper_sizes["width"] * 72
+    pg_height= album_page.paper_sizes["height"] * 72
+    pdf_page = pdf_document.new_page(width= pg_width, height= pg_height)
   
-    x_0 = x_1 = y_0 = y_1 = 0  # tmp.... resolver ajuste de coordenadas para ubicar el working page
+    x_0 = x_1 = y_0 = y_1 = 0  # tmp.... resolver ajuste de coordenadas para ubicar el working page ?
     last_y_pos = 0
-
-    for serials_containers in containers_box:
-        # locate boxes in pages. In one page might be located one or more boxes
-        for _index, serial_container in enumerate(serials_containers):      ???????????????????? cambiar 
-
-            # to save position of containers in pages
-            for j,(x, y, serial_container) in enumerate(serial_containers):
-                x0, y0 = (x_0 + x) * 72, (y_0 + y) * 72
-                x1, y1 = (x_1 + x + serial_container.width) * 72, (y_1 + y + serial_container.height) * 72
-                container_rect = fitz.Rect(x0, y0, x1, y1)
-                pdf_page.draw_rect(container_rect, fill=(.8, .8, .8), fill_opacity=0.1)  # limites del contenedor. temporal!!!!
-                
-                # to put stamps inside the containers:
-                for row in serial_container.rows:
-                    for stamp_container in row.stamp_containers:
-                        x00, y00, x01, y01 = [coord * 72 for coord in stamp_container.rect]
-                        stamp_rect = fitz.Rect(x00 + x0, y00 + y0, x01 + x0, y01 + y0)
-                        pdf_page.draw_rect(stamp_rect, fill=(0, 0, .8), fill_opacity=0.1, color=(1, 0, 0), stroke_opacity=0.2, width=1)
-                        # working_area.draw_rect(stamp_rect, color=(0, 0, 0), width=1)
-
-                # at the end of the page, save it to the pdf_document and create another page if there is another box.
-                if _index != len(serials_containers)-1 and not (y >= last_y_pos) : # (para excl last_pos=0)
-                    #pdf_document.insert_page(-1, pdf_page)
-                    pdf_page = pdf_document.new_page(width=album_page.paper_sizes["width"] * 72, height=album_page.paper_sizes["height"] * 72)          
-                    _index += 1           
-                last_y_pos = y  
     
+    # locate series containers in pages. 
+    for series_container in series__containers:
+
+        # Series_container coordinates respect to the begining of the page
+        x1 =series_container.ini_coord[0] *72
+        y1 = series_container.ini_coord[1] *72
+        x2 = x1 + series_container.width *72
+        y2 = y1 + series_container.height *72
+
+        # check if the new container should be located in a new page (the 1st one is excluded by the condition).
+        if  not (y1 >= last_y_pos):
+            pdf_page = pdf_document.new_page(width= pg_width, height= pg_height)            
+
+        # ____ margenes de los contenedores (TMP) ________
+        container_rect = fitz.Rect(x1, y1, x2, y2)
+        pdf_page.draw_rect(container_rect, fill=(.8, .8, .8), fill_opacity=0.1)
+        # ________________________________________________
+
+        # Putting stamps inside the containers:
+        for row in series_container.rows:
+            for stamp_container in row.stamp_containers:
+                x01, y01, x02, y02 = [coord * 72 for coord in stamp_container.rect]
+                stamp_rect = fitz.Rect(x1+x01, y1+y01 , x1+x02, y1+y02)
+                pdf_page.draw_rect(stamp_rect, fill=(0, 0, .8), fill_opacity=0.1, color=(1, 0, 0), stroke_opacity=0.2, width=1)
+                # working_area.draw_rect(stamp_rect, color=(0, 0, 0), width=1)
+        
+        last_y_pos = y1  
+
     return pdf_document
+
+
  
 def conform_album_pages(pdf_document, content_options):
-
- ##   pdf_file = fitz.open(pdf_document_path)
-    num_pgs = pdf_document.page_count
-   ## pdf_page = pdf_document[0]  # open the first page
 
     album_pages = AlbumPages(None)
 
@@ -79,16 +76,20 @@ def conform_album_pages(pdf_document, content_options):
             rect = fitz.Rect(x0 - 3, y0 - 3, x1 + 3, y1 + 3)
             pdf_page.draw_rect(rect, (0, 0, 0), width=2)
  
-        # put the country as the title of the page (tmp) in the top of the page...to be defined the location, color, etc in settings.
+        # Title... put the country as the title of the page (TMP) in the top of the page...to be defined the location, color, etc in settings.
         album_title = content_options["country"] 
-        #pdf_page.insert_textbox(fitz.Rect(x0 , y0, x1, y0 + 20), album_title, fontsize=12, color=(0,0,1), align=1) # title of the page arriba al centro (centrar bien pdte) 
         x_pos= (x1- len(album_title))/2
         point= fitz.Point(x_pos,y0+18)
         pdf_page.insert_text(point, album_title, fontsize=12, color=(0,0,1))
-        # write the page number
-        ## pdf_page.insert_textbox(fitz.Rect(x1 - 50, y1 - 20, x1, y1), f"__Pag._ {pg}", fontsize=8, color=(0,0,0), align=2) 
 
-        #______ cuadricular TMP !__________________________________________
+        # Page number
+        num_pgs = pdf_document.page_count
+        pg_text= f"__Pag._ {pg} / {num_pgs}"
+        x_pos= (x1- len(pg_text))/2                             # pos. al medio ..
+        point= fitz.Point(x_pos,y1-18)
+        pdf_page.insert_text(point, pg_text, fontsize=8, color=(0,0,1))    
+
+        #____________TMP__________________cuadricular paper_____________________________
         sizes= album_pages.paper_sizes
         x1 = int(sizes["width"] * 72)
         y1 = int(sizes["height"] * 72)
@@ -102,7 +103,7 @@ def conform_album_pages(pdf_document, content_options):
             p1 = fitz.Point(0, y)
             p2 = fitz.Point(x1, y)
             pdf_page.draw_line(p1, p2, color=(.2, .2, .2), stroke_opacity=0.1, width=1)
-        # _________________________________________________________
+        #______________________________________________________________________________
 
    # Save the pdf_document to a file
     output_file_name = content_options["output_options"]["file_name"]
@@ -114,8 +115,8 @@ def conform_album_pages(pdf_document, content_options):
     pdf_document_path = os.path.join(output_file_path, output_file_name)
     pdf_document.save(pdf_document_path)
     pdf_document.close()
-
-
+  
+    return
 
 
 
