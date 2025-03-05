@@ -124,14 +124,14 @@ def distribute_containers(series__containers: list[SeriesContainer]) -> list[Wor
     # Distributes as many series_containers as the working area can fit. 
 
     album_page= AlbumPages(None)
-    box= WorkSpace(None)
+   # box= WorkSpace(None)
 
     # working space limits
     coor=WorkSpace.get_working_limits(None)
     x0,y0,x1,y1 = coor.values()
 
-    current_x = x0              # working_area left side
-    current_y = y0              # working_area top
+    current_x = x0              
+    current_y = y0              
     max_height_on_row = 0
     horiz_pad = album_page.cont_horiz_pad
     vert_pad = album_page.cont_vert_pad
@@ -150,15 +150,15 @@ def distribute_containers(series__containers: list[SeriesContainer]) -> list[Wor
             current_y = y0
             max_height_on_row = 0
 
-        current_x += horiz_pad if current_x == x0 else horiz_pad 
+        #current_x += horiz_pad if current_x == x0 else horiz_pad 
         series_containers.ini_coord= [current_x, current_y]
         current_x += series_containers.width
         max_height_on_row = max(max_height_on_row, series_containers.height)
 
     # Align the series_containers in the work area:
 
-#  horiz_alignment(series__containers)
-#  vert_alignment(series_containers_list)
+    horiz_alignment(series__containers)
+ #   vert_alignment(series__containers)
 
     return series__containers
 
@@ -166,91 +166,100 @@ def horiz_alignment(series__containers: list[SeriesContainer]):
 
     # Group containers by their y-coordinate (ini_coord[1])
     rows = {}
-    last_y_coord= 0
     ord = 0
     for container in series__containers:
         y_coord = container.ini_coord[1]
-        if (ord,y_coord) not in rows: #and not (y_coord >= last_y_coord): # ??? todavia.. no puedo dejar la misma llave
+        if (ord,y_coord) not in rows:    # pq y_coord se repite en cada pg
             ord += 1
-            rows[(ord, y_coord)] = []        
-        rows[(ord, y_coord)].append(container)
+            key= (ord, y_coord)
+            rows[key] = []             
+        rows[key].append(container)
 
-    page = AlbumPages(None)
-    horiz_pad = page.cont_horiz_pad
-    alignment = page.cont_horiz_algmt
+    album_page = AlbumPages(None)
+    horiz_pad = album_page.cont_horiz_pad
+    alignment = album_page.cont_horiz_algmt
+    pg_width = album_page.page_width
 
+    # Alignment respect to the page borders
     for y_coord, row in rows.items():
-        total_width = sum(container.width for container in row)
-        available_width = page.page_width - 2 * horiz_pad
+        containers_width = sum(container.width for container in row)
+        current_x = 0
 
-        if alignment == "uniform":               #containers are spaced uniformly 
-            space = (available_width - total_width) / (len(row) + 1)
-            current_x = horiz_pad + space
+        if alignment == "uniform":         #containers are spaced uniformly 
+            available_width = pg_width - containers_width
+            space= available_width / (len(row) + 1  )
+            current_x = space
             for container in row:
                 container.ini_coord[0] = current_x
-                current_x += container.width + space
-        elif alignment == "justify":      #containers are spaced to fill the available width, with equal space between them.
-            if len(row) > 1:
-                space = (available_width - total_width) / (len(row) - 1)
-                current_x = horiz_pad
-                for container in row:
-                    container.ini_coord[0] = current_x
-                    current_x += container.width + space
-            else:
-                container.ini_coord[0] = (available_width - total_width) / 2 + horiz_pad
-        elif alignment == "center":          # containers are centered within the available width.
-            current_x = (available_width - total_width) / 2 + horiz_pad
+                current_x += container.width + space        
+        elif alignment == "center":      # containers are page centered keeping the setted min paddings  
+            available_width = pg_width - containers_width - horiz_pad *(len(row)-1)          
+            current_x = available_width /2
             for container in row:
                 container.ini_coord[0] = current_x
-                current_x += container.width
-        elif alignment == "right":          #containers are aligned to the right within the available width.
-            current_x = available_width - total_width + horiz_pad
+                current_x += container.width + horiz_pad
+        elif alignment == "right":          #containers are aligned to the right keeping the setted min paddings
+            available_width = pg_width - containers_width - horiz_pad *(len(row))
+            current_x = available_width 
             for container in row:
                 container.ini_coord[0] = current_x
-                current_x += container.width
-        elif alignment == "left":           #containers are aligned to the left within the available width.
+                current_x += container.width + horiz_pad
+        
+        if alignment == "left":           #containers are aligned to the left keeping the setted min paddings
             current_x = horiz_pad
             for container in row:
                 container.ini_coord[0] = current_x
-                current_x += container.width
+                current_x += container.width + horiz_pad
 
     return series__containers
 
 
-def vert_alignment(series_containers_list: list[SeriesContainer]): # alignment can be: "top", "middle", or "bottom". 
-    rows = []
-    current_row = []
-    current_y = 0
-    max_height_on_row = 0
-    page= AlbumPages(None)
+def vert_alignment(series__containers: list[SeriesContainer]):
+    # Group containers by their x-coordinate (ini_coord[0])
+    rows = {}
+    ord = 0
+    for container in series__containers:
+        y_coord = container.ini_coord[1]
+        if (ord,y_coord) not in rows:    # pq y_coord se repite en cada pg
+            ord += 1
+            key= (ord, y_coord)
+            rows[key] = []             
+        rows[key].append(container)
 
-    for x, y, container in box.containers:
-        if current_y + container.height > box.height:
-            rows.append((current_row, max_height_on_row))
-            current_row = []
-            current_y += max_height_on_row
-            max_height_on_row = 0
+    album_page = AlbumPages(None)
+    vert_pad = album_page.cont_vert_pad
+    alignment = album_page.cont_vert_algmt
+    pg_height = album_page.page_height
 
-        current_row.append((x, y, container))
-        current_y += container.height
-        max_height_on_row = max(max_height_on_row, container.height)
+    last_y_pos = 0
 
-    rows.append((current_row, max_height_on_row))
+   ## while not (y_coord >= last_y_pos): #######################
+   ##     try:
+   ##         ord, y_coord
+    for y_coord, row in rows.items():
+        containers_height = sum(container.height for container in row)
+        current_y = 0
 
-    for row, row_height in rows:
-        for i, (x, y, container) in enumerate(row):
-            if page.cont_vert_algmt == "top":                                
-                new_y = y
-            elif page.cont_vert_algmt == "middle":
-                new_y = y + (row_height - container.height) / 2
-            elif page.cont_vert_algmt == "bottom":
-                new_y = y + (row_height - container.height)
-            else:
-                raise ValueError("Invalid alignment type. Choose from 'top', 'middle', or 'bottom'.")
-            row[i] = (x, new_y, container)
+        if alignment == "uniform":  # containers are spaced uniformly
+            available_height = pg_height - containers_height
+            space = available_height / (len(column) + 1)
+            current_y = space
+            for container in column:
+                container.ini_coord[1] = current_y
+                current_y += container.height + space
+        elif alignment == "top":  # containers are aligned to the top keeping the set min paddings
+            current_y = vert_pad
+            for container in column:
+                container.ini_coord[1] = current_y
+                current_y += container.height + vert_pad
+        elif alignment == "middle":  # containers are centered vertically keeping the set min paddings
+            available_height = pg_height - containers_height - vert_pad * (len(column) - 1)
+            current_y = available_height / 2
+            for container in column:
+                container.ini_coord[1] = current_y
+                current_y += container.height + vert_pad
 
-    box.containers = [item for row, _ in rows for item in row]
-
+    return series__containers
 
 # This function orchestrates the creation of album pages based on the content_options and the album_page_layout.
 # Args: - content_options, includes: selection criteries of needed series from an input file and the output path.

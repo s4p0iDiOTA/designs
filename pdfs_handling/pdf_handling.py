@@ -7,40 +7,40 @@ def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):
     # open a new pdf document for storing the stamp containers.
     pdf_document = fitz.open()
            
-    # create a pdf_page object with the album_pages paper size. It is not added automatically to the document.
+    # create a pdf_page object with the selected paper size. 
     album_page = AlbumPages(None)
-    pg_width= album_page.paper_sizes["width"] * 72
-    pg_height= album_page.paper_sizes["height"] * 72
-    pdf_page = pdf_document.new_page(width= pg_width, height= pg_height)
+    paper_width= album_page.paper_sizes["width"] * 72
+    paper_height= album_page.paper_sizes["height"] * 72
+    working_margins = album_page.working_margins
+    page_margins = album_page.page_margins
+    pdf_page = pdf_document.new_page(width= paper_width, height= paper_height)
   
-    x_0 = x_1 = y_0 = y_1 = 0  # tmp.... resolver ajuste de coordenadas para ubicar el working page ?
     last_y_pos = 0
     
     # locate series containers in pages. 
     for series_container in series__containers:
 
-        # Series_container coordinates respect to the begining of the page
-        x1 =series_container.ini_coord[0] *72
-        y1 = series_container.ini_coord[1] *72
-        x2 = x1 + series_container.width *72
-        y2 = y1 + series_container.height *72
+        # Calculate  coordinates of series_container respect to the begining of the paper 
+        x1 = (series_container.ini_coord[0] + page_margins["left"]) * 72   #  + working_margins["left"]    REV!!!!!!!
+        y1 = (series_container.ini_coord[1] + page_margins["top"] + working_margins["top"]) * 72
+        x2 = x1 + series_container.width * 72
+        y2 = y1 + series_container.height * 72
 
         # check if the new container should be located in a new page (the 1st one is excluded by the condition).
         if  not (y1 >= last_y_pos):
-            pdf_page = pdf_document.new_page(width= pg_width, height= pg_height)            
+            pdf_page = pdf_document.new_page(width= paper_width, height= paper_height)            
 
-        # ____ margenes de los contenedores (TMP) ________
+        # ____ margenes de los contenedores (Temporal) ________
         container_rect = fitz.Rect(x1, y1, x2, y2)
         pdf_page.draw_rect(container_rect, fill=(.8, .8, .8), fill_opacity=0.1)
         # ________________________________________________
 
-        # Putting stamps inside the containers:
+        # Draw stamp_containers for the location of the stamps:
         for row in series_container.rows:
             for stamp_container in row.stamp_containers:
                 x01, y01, x02, y02 = [coord * 72 for coord in stamp_container.rect]
                 stamp_rect = fitz.Rect(x1+x01, y1+y01 , x1+x02, y1+y02)
                 pdf_page.draw_rect(stamp_rect, fill=(0, 0, .8), fill_opacity=0.1, color=(1, 0, 0), stroke_opacity=0.2, width=1)
-                # working_area.draw_rect(stamp_rect, color=(0, 0, 0), width=1)
         
         last_y_pos = y1  
 
@@ -84,24 +84,25 @@ def conform_album_pages(pdf_document, content_options):
 
         # Page number
         num_pgs = pdf_document.page_count
-        pg_text= f"__Pag._ {pg} / {num_pgs}"
+        pg_text= f"_ Pg: {pg+1} / {num_pgs} _"
         x_pos= (x1- len(pg_text))/2                             # pos. al medio ..
         point= fitz.Point(x_pos,y1-18)
         pdf_page.insert_text(point, pg_text, fontsize=8, color=(0,0,1))    
 
+
         #____________TMP__________________cuadricular paper_____________________________
         sizes= album_pages.paper_sizes
-        x1 = int(sizes["width"] * 72)
-        y1 = int(sizes["height"] * 72)
+        x__1 = int(sizes["width"] * 72)
+        y__1 = int(sizes["height"] * 72)
         x = 0
         y = 0
-        for x in range(0, x1, 72):
+        for x in range(0, x__1, 72):
             p1 = fitz.Point(x, 0)
-            p2 = fitz.Point(x, y1)
+            p2 = fitz.Point(x, y__1)
             pdf_page.draw_line(p1, p2, color=(.2, .2, .2), stroke_opacity=0.1, width=1)
-        for y in range(0, y1, 72):
+        for y in range(0, y__1, 72):
             p1 = fitz.Point(0, y)
-            p2 = fitz.Point(x1, y)
+            p2 = fitz.Point(x__1, y)
             pdf_page.draw_line(p1, p2, color=(.2, .2, .2), stroke_opacity=0.1, width=1)
         #______________________________________________________________________________
 

@@ -110,20 +110,23 @@ class WorkSpace:           # permite asignar valores inciales a la clase y luego
             WorkSpace.default_height = work_area.get("height")
         self.width= self.default_width
         self.height= self.default_height  
-        self.box_of_containers = []  # List [x, y, list of containers in the same row]
 
-    def add_container(self, x: float, y: float, container):
-        self.box.append((x, y, container))
+   # def add_container(self, x: float, y: float, container):
+   #     self.box.append((x, y, container))
 
     def get_working_limits(self) -> dict:       # returns the working area coodinates of the page
         page=AlbumPages(None)
-        coor= page.get_page_borders()
-        x01,y01,x02,y02 = coor.values()               # page borders
+       # coor= page.get_page_borders()
+       # x01,y01,x02,y02 = coor.values()               # page borders
         return {
-            "x1": x01 + page.working_margins["left"],       
-            "y1": y01 + page.working_margins["top"],
-            "x2": x02 - page.working_margins["right"],
-            "y2": y02 - page.working_margins["bottom"]
+            "x1": 0,
+            "y1": 0,
+            "x2": page.working_area_width,
+            "y2": page.working_area_height
+            #"x1": x01 + page.working_margins["left"],       
+            #"y1": y01 + page.working_margins["top"],
+            #"x2": x02 - page.working_margins["right"],
+            #"y2": y02 - page.working_margins["bottom"]
             }
 
 class AlbumPages:                 
@@ -144,7 +147,7 @@ class AlbumPages:
         self.working_margins = config_file["page_options"]["work_area_margins"]
         self.working_area_width = self.page_width - self.working_margins["left"] - self.working_margins["right"]
         self.working_area_height = self.page_height - self.working_margins["top"] - self.working_margins["bottom"]
-        self.working_area = WorkSpace({"width": self.working_area_width, "height": self.working_area_height, "margins":self.working_margins})
+        self.working_area = WorkSpace({"width": self.working_area_width, "height": self.working_area_height})
           
         self.cont_horiz_pad= config_file["container_settings"]["horizontal_paddings"] 
         self.cont_vert_pad= config_file["container_settings"]["vertical_paddings"]
