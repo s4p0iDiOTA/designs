@@ -19,3 +19,20 @@ generate_album_pages()
 
 
 
+"""
+
+-Series__containers es una lista de SeriesContainer. 
+-Los StampsContainer con Stamps de una misma serie se ubican en un mismo series_container: SeriesContainer.
+-Un series_container puede alojar una serie en una o mas filas. 
+-Cuando mas de un series_container de solo una fila caben horizontalmente, se pueden ubicar en un mismo nivel.
+
+
+Por ver:
+-Si un contenedor no cabe en una pagina ?
+
+
+
+"""
+
+
+

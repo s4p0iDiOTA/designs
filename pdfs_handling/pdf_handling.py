@@ -30,7 +30,7 @@ def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):
         if  not (y1 >= last_y_pos):
             pdf_page = pdf_document.new_page(width= paper_width, height= paper_height)            
 
-        # ____ margenes de los contenedores (Temporal) ________
+        # ____ margenes de los contenedores (Temporal o no ?) ________
         container_rect = fitz.Rect(x1, y1, x2, y2)
         pdf_page.draw_rect(container_rect, fill=(.8, .8, .8), fill_opacity=0.1)
         # ________________________________________________

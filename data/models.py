@@ -99,10 +99,9 @@ class SeriesContainer:
 
     def __repr__(self) -> str:
         return f"SeriesContainer(height={self.height}, width={self.width}, rows={len(self.rows)})"
+    
 
-
-class WorkSpace:           # permite asignar valores inciales a la clase y luego hacer instancias sin argumento    
-    default_width= None
+class WorkSpace:           
     default_height= None                                       
     def __init__(self, work_area):
         if work_area:
