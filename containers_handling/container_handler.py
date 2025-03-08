@@ -1,5 +1,5 @@
 from data.data_layer import validate_json_file, read_json, get_series
-from data.models import Series, SeriesContainer, ContainerRow, StampContainer, WorkSpace, AlbumPages
+from data.models import Series, SeriesContainer, ContainerRow, StampContainer, AlbumPages
 from pdfs_handling.pdf_handling import put_containers_in_pdf_pages, conform_album_pages
 
 
@@ -120,44 +120,46 @@ def vert_stamps_alignment(series_container: SeriesContainer) -> SeriesContainer:
             stamp_container.rect[3] += diff  # y3 (height)
     return series_container
  
-def distribute_containers(series__containers: list[SeriesContainer]) -> list[WorkSpace]:
+def distribute_containers(series__containers: list[SeriesContainer]) -> list:
     # Distributes as many series_containers as the working area can fit. 
     # The containers are distributed as much as they can fit fisrt horizontally then vertically.
     # Adds the start coordinates of each container relative to the start coordinates of
     # the working area. When the containers fills up the area corresponding to a work area,
     # their start coordinates are adjusted to the start of the working area. 
 
-    album_page= AlbumPages(None)
+    album_page= AlbumPages()
 
-    # working space limits
-    coor=WorkSpace.get_working_limits(None)
-    #coor= album_page.get_page_borders()
+    # working limits
+    coor=album_page.get_working_coordinates()
     x1,y1,x2,y2 = coor.values()
 
-    current_x = x1              
-    current_y = y1              
+          
     max_height_on_row = 0
     horiz_pad = album_page.cont_horiz_pad
     vert_pad = album_page.cont_vert_pad
+    
+    current_x = x1         
+    current_y = y1 
 
-    for series_containers in series__containers:
+    for series_container in series__containers:
 
         # if the next container don´t fits horizontally in the work_area:
-        if current_x + series_containers.width + horiz_pad * 2 > x2:  # move down
+        if current_x + series_container.width + horiz_pad * 2 > x2:  # move down
             current_x = x1                                          
-            current_y += max_height_on_row + vert_pad       
+            current_y += max_height_on_row        
             max_height_on_row = 0
 
         # if the container don´t fits down, change to a new work_area
-        if current_y + series_containers.height > y2:  
+        if current_y + series_container.height + vert_pad > y2:  
             current_x = x1
             current_y = y1
             max_height_on_row = 0
 
-        #current_x += horiz_pad if current_x == x0 else horiz_pad 
-        series_containers.ini_coord= [current_x, current_y]
-        current_x += series_containers.width
-        max_height_on_row = max(max_height_on_row, series_containers.height)
+
+        series_container.ini_coord= [current_x, current_y]
+        current_x += series_container.width
+        #current_y += vert_pad
+        max_height_on_row = max(max_height_on_row, series_container.height)
 
     # Align the series_containers in the work area:
 
@@ -182,7 +184,7 @@ def horiz_alignment(series__containers: list[SeriesContainer]):
             rows[key] = []             
         rows[key].append(container)
 
-    album_page = AlbumPages(None)
+    album_page = AlbumPages()
     horiz_pad = album_page.cont_horiz_pad
     alignment = album_page.cont_horiz_algmt
     pg_width = album_page.page_width
@@ -224,8 +226,9 @@ def horiz_alignment(series__containers: list[SeriesContainer]):
 
 
 def vert_alignment(series__containers: list[SeriesContainer]):
-    # Group containers by their y-coordinate (ini_coord[1]) to form rows 
-    # Los cont. vienen ubicados, segun sus y_coord, directamente uno bajo el otro
+
+    # Group containers by their y-coordinate (ini_coord[1]) to form rows list
+    # one row can hold more than one container..(for further vertical row alignment)
     rows = {}
     row_num = 0
     for container in series__containers:
@@ -237,13 +240,14 @@ def vert_alignment(series__containers: list[SeriesContainer]):
             rows[key] = []           
         rows[key].append(container)  
 
-    # Grouping rows by pages using y_coord
+    # Grouping rows by pages. Creates rows_per_page list
     rows_per_pages = {}
     pg_num = 0
     last_y_pos = 0
-    for key, row in sorted(rows.items()): 
-        y_coord = key[1]                     #key(row_num,y_coord)
-        if  y_coord <= last_y_pos:       
+    rows_per_pages[pg_num] = []
+    for key, row in sorted(rows.items()):    #key(row_num,y_coord)
+        y_coord = key[1]                     
+        if  y_coord < last_y_pos:       
             pg_num += 1
             rows_per_pages[pg_num] = []
         last_y_pos = y_coord
@@ -259,7 +263,7 @@ def vert_alignment(series__containers: list[SeriesContainer]):
                 diff = row_height - series_container.height
                 series_container.ini_coord[1] += diff  # y1 (container initial pos )       
 
-    album_page = AlbumPages(None)
+    album_page = AlbumPages()
     vert_pad = album_page.cont_vert_pad
     alignment = album_page.cont_vert_algmt
     pg_height = album_page.page_height
@@ -279,7 +283,7 @@ def vert_alignment(series__containers: list[SeriesContainer]):
                     container.ini_coord[1] += current_y
                 current_y += space
         elif alignment == "top":  # rows are aligned to the top keeping the set min paddings
-            current_y = vert_pad
+            current_y= 0
             for row in rows:
                 row_height = max(container.height for container in row)
                 for container in row:
@@ -333,7 +337,7 @@ def vert_alignment1(series__containers: list[SeriesContainer]):
 
     num_of_pages= pg_num
 
-    album_page = AlbumPages(None)
+    album_page = AlbumPages()
     vert_pad = album_page.cont_vert_pad
     alignment = album_page.cont_vert_algmt
     pg_height = album_page.page_height

@@ -101,36 +101,9 @@ class SeriesContainer:
         return f"SeriesContainer(height={self.height}, width={self.width}, rows={len(self.rows)})"
     
 
-class WorkSpace:           
-    default_height= None                                       
-    def __init__(self, work_area):
-        if work_area:
-            WorkSpace.default_width= work_area.get("width") 
-            WorkSpace.default_height = work_area.get("height")
-        self.width= self.default_width
-        self.height= self.default_height  
-
-   # def add_container(self, x: float, y: float, container):
-   #     self.box.append((x, y, container))
-
-    def get_working_limits(self) -> dict:       # returns the working area coodinates of the page
-        page=AlbumPages(None)
-       # coor= page.get_page_borders()
-       # x01,y01,x02,y02 = coor.values()               # page borders
-        return {
-            "x1": 0,
-            "y1": 0,
-            "x2": page.working_area_width,
-            "y2": page.working_area_height
-            #"x1": x01 + page.working_margins["left"],       
-            #"y1": y01 + page.working_margins["top"],
-            #"x2": x02 - page.working_margins["right"],
-            #"y2": y02 - page.working_margins["bottom"]
-            }
-
 class AlbumPages:                 
     default_config_file=[]
-    def __init__(self, config_file: str):
+    def __init__(self, config_file: str = None):
         if config_file:
             AlbumPages.default_config_file= config_file
         config_file= AlbumPages.default_config_file
@@ -146,27 +119,38 @@ class AlbumPages:
         self.working_margins = config_file["page_options"]["work_area_margins"]
         self.working_area_width = self.page_width - self.working_margins["left"] - self.working_margins["right"]
         self.working_area_height = self.page_height - self.working_margins["top"] - self.working_margins["bottom"]
-        self.working_area = WorkSpace({"width": self.working_area_width, "height": self.working_area_height})
+        self.working_area = ({"width": self.working_area_width, "height": self.working_area_height})
           
         self.cont_horiz_pad= config_file["container_settings"]["horizontal_paddings"] 
         self.cont_vert_pad= config_file["container_settings"]["vertical_paddings"]
         self.cont_horiz_algmt= config_file["container_settings"]["horizontal_alignment"]
         self.cont_vert_algmt= config_file["container_settings"]["vertical_alignment"]
 
-        self.max_container_width = self.working_area.width
+        self.max_container_width = self.working_area_width
 
         self.stamp_padding = config_file["serial_stamps"]["stamp_padding"]
         self.stamps_horiz_alignment = config_file["serial_stamps"]["horizontal_alignment"]
 
-     # Get the border based on border_options and paper_options.         
+     # Get the page border coordinates based on border_options and paper_options.         
     def get_page_borders(self) -> dict:
         return {
             "x1": self.page_margins["left"],
             "y1": self.page_margins["top"],
             "x2": self.paper_sizes["width"] - self.page_margins["right"],
             "y2": self.paper_sizes["height"] - self.page_margins["bottom"]
-        }
-
+            }
+    
+     # Get the working_area coordinates
+    def get_working_coordinates(self = None) -> dict:    # returns the working limits = None) -> None:
+        page=AlbumPages(None)
+        coord= self.get_page_borders()
+        x01, y01, x02, y02 = coord.values()
+        return {
+            "x1": x01 + page.working_margins["left"],       
+            "y1": y01 + page.working_margins["top"],
+            "x2": x02 - page.working_margins["right"],
+            "y2": y02 - page.working_margins["bottom"]
+            }
 
 
 

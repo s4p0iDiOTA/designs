@@ -15,19 +15,20 @@ def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):
     page_margins = album_page.page_margins
     pdf_page = pdf_document.new_page(width= paper_width, height= paper_height)
   
-    last_y_pos = 0
+    last_y1_pos = 0
+    last_y2_pos = 0
     
     # locate series containers in pages. 
     for series_container in series__containers:
 
         # Calculate  coordinates of series_container respect to the begining of the paper 
-        x1 = (series_container.ini_coord[0] + page_margins["left"]) * 72   #  + working_margins["left"]    REV!!!!!!!
-        y1 = (series_container.ini_coord[1] + page_margins["top"] + working_margins["top"]) * 72
+        x1 = series_container.ini_coord[0] *72 #+ page_margins["left"]) * 72   #  + working_margins["left"]    REV!!!!!!!
+        y1 = series_container.ini_coord[1] *72 #+ page_margins["top"] + working_margins["top"]) * 72
         x2 = x1 + series_container.width * 72
         y2 = y1 + series_container.height * 72
 
         # check if the new container should be located in a new page (the 1st one is excluded by the condition).
-        if  not (y1 >= last_y_pos):
+        if (y2 != last_y2_pos) and not (y1 >= last_y1_pos):
             pdf_page = pdf_document.new_page(width= paper_width, height= paper_height)            
 
         # ____ margenes de los contenedores (Temporal o no ?) ________
@@ -42,7 +43,8 @@ def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):
                 stamp_rect = fitz.Rect(x1+x01, y1+y01 , x1+x02, y1+y02)
                 pdf_page.draw_rect(stamp_rect, fill=(0, 0, .8), fill_opacity=0.1, color=(1, 0, 0), stroke_opacity=0.2, width=1)
         
-        last_y_pos = y1  
+        last_y1_pos = y1 
+        last_y2_pos = y2 
 
     return pdf_document
 
@@ -92,19 +94,46 @@ def conform_album_pages(pdf_document, content_options):
 
         #____________TMP__________________cuadricular paper_____________________________
         sizes= album_pages.paper_sizes
-        x__1 = int(sizes["width"] * 72)
-        y__1 = int(sizes["height"] * 72)
-        x = 0
-        y = 0
-        for x in range(0, x__1, 72):
-            p1 = fitz.Point(x, 0)
-            p2 = fitz.Point(x, y__1)
+        _x1_ = int(sizes["width"] * 72)
+        _y1_ = int(sizes["height"] * 72)
+        _x0_ = 0
+        _y0_ = 0
+        for _x0_ in range(0, _x1_, 72):
+            p1 = fitz.Point(_x0_, 0)
+            p2 = fitz.Point(_x0_, _y1_)
             pdf_page.draw_line(p1, p2, color=(.2, .2, .2), stroke_opacity=0.1, width=1)
-        for y in range(0, y__1, 72):
-            p1 = fitz.Point(0, y)
-            p2 = fitz.Point(x__1, y)
+        for _y0_ in range(0, _y1_, 72):
+            p1 = fitz.Point(0, _y0_)
+            p2 = fitz.Point(_x1_, _y0_)
             pdf_page.draw_line(p1, p2, color=(.2, .2, .2), stroke_opacity=0.1, width=1)
         #______________________________________________________________________________
+
+        #____________TMP__________________cuadricular working_area_____________________________
+        coor= album_pages.get_working_coordinates()
+        _x0_, _y0_, _x1_, _y1_ = coor.values()
+        _x0_ = int(_x0_*72)
+        _y0_ = int(_y0_*72)
+        _x1_ = int(_x1_*72)
+        _y1_ = int(_y1_*72)
+        rect= (_x0_,_y0_,_x1_,_y1_)
+        pdf_page.draw_rect(rect, fill=(0, 0, .8), fill_opacity=0, color=(0, 1, 0), stroke_opacity=0.2, width=1)
+        for _x0_ in range(_x0_, _x1_, 72): #vert
+            p1 = fitz.Point(_x0_, _y0_)
+            p2 = fitz.Point(_x0_, _y1_)
+            pdf_page.draw_line(p1, p2, color=(0, 1, 0), stroke_opacity=0.2, width=1)
+        _x0_, _y0_, _x1_, _y1_ = coor.values()
+        _x0_ = int(_x0_*72)
+        _y0_ = int(_y0_*72)
+        _x1_ = int(_x1_*72)
+        _y1_ = int(_y1_*72)
+        for _y0_ in range(_y0_, _y1_, 72): # horiz
+            p1 = fitz.Point(_x0_,_y0_)
+            p2 = fitz.Point(_x1_,_y0_)
+            pdf_page.draw_line(p1, p2, color=(0, 1, 0), stroke_opacity=0.2, width=1)
+        #______________________________________________________________________________
+
+
+
 
    # Save the pdf_document to a file
     output_file_name = content_options["output_options"]["file_name"]
