@@ -139,18 +139,19 @@ def distribute_containers(series__containers: list[SeriesContainer]) -> list:
     vert_pad = album_page.cont_vert_pad
     
     current_x = x1         
-    current_y = y1 
+    current_y = y1
+     
 
     for series_container in series__containers:
 
         # if the next container don´t fits horizontally in the work_area:
-        if current_x + series_container.width + horiz_pad * 2 > x2:  # move down
+        if current_x + series_container.width + horiz_pad * 2 > x2:  
             current_x = x1                                          
-            current_y += max_height_on_row        
+            current_y += max_height_on_row + vert_pad       
             max_height_on_row = 0
 
         # if the container don´t fits down, change to a new work_area
-        if current_y + series_container.height + vert_pad > y2:  
+        if current_y + series_container.height  > y2:  
             current_x = x1
             current_y = y1
             max_height_on_row = 0
@@ -158,8 +159,9 @@ def distribute_containers(series__containers: list[SeriesContainer]) -> list:
 
         series_container.ini_coord= [current_x, current_y]
         current_x += series_container.width
-        #current_y += vert_pad
+        #current_y += vert_pad if 
         max_height_on_row = max(max_height_on_row, series_container.height)
+
 
     # Align the series_containers in the work area:
 
@@ -247,7 +249,7 @@ def vert_alignment(series__containers: list[SeriesContainer]):
     rows_per_pages[pg_num] = []
     for key, row in sorted(rows.items()):    #key(row_num,y_coord)
         y_coord = key[1]                     
-        if  y_coord < last_y_pos:       
+        if  y_coord <= last_y_pos:       
             pg_num += 1
             rows_per_pages[pg_num] = []
         last_y_pos = y_coord

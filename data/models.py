@@ -149,7 +149,9 @@ class AlbumPages:
             "x1": x01 + page.working_margins["left"],       
             "y1": y01 + page.working_margins["top"],
             "x2": x02 - page.working_margins["right"],
+            #"x2": page.working_area_width,
             "y2": y02 - page.working_margins["bottom"]
+            #"y2": page.working_area_height
             }
 
 
