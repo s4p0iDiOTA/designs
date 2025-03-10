@@ -1,6 +1,8 @@
 import fitz  # PyMuPDF
-from data.models import SeriesContainer, AlbumPages
 import os
+
+from data.models import AlbumPages
+from data.objects.containers import SeriesContainer
 
 # create a pdf document. Locates serial containers in the pdf pages.
 def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):
