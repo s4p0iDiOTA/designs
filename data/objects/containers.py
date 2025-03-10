@@ -1,7 +1,10 @@
 from typing import Any, Dict, List
 
-from data.models import Stamp, Series
-from data.objects.options import AligmentOptions, Margin
+import fitz
+
+from data.common import coordinates_to_points, in_to_points
+from data.models import AlbumPages, Stamp, Series
+from data.objects.options import AligmentOptions, BorderOptions, Gaps, Margin
 
 
 class Container:
@@ -68,8 +71,19 @@ class Container:
         x2 = x1 + self.width
         y2 = y1 + self.height
         return (x1, y1, x2, y2)
-        
     
+    def get_absolute_origin(self, origin: tuple) -> tuple:
+        """Returns the absolute origin of the container based on the given origin."""
+        x = origin[0] + self.relative_coordinates[0]
+        y = origin[1] + self.relative_coordinates[1]
+        return (x, y)
+    
+    def render(self, pdf_page: fitz.Page, origin: tuple) -> None:
+        """Renders the container on the given pdf page."""
+        x1, y1, x2, y2 = coordinates_to_points(self.get_absolute_coordinates(origin))
+        pdf_page.draw_rect((x1, y1, x2, y2), color=(0, 0, 0), width=1)
+
+
 class Row(Container):
     def __init__(self, alignment_options: AligmentOptions, relative_coordinates: tuple, width: float = 0.0, items: List[Container] = None) -> None:
         self.alignment_options: AligmentOptions = alignment_options
@@ -113,21 +127,21 @@ class Row(Container):
         if self.alignment_options.vertical == AligmentOptions.Vertical.UNIFORM:
             # Uniform vertical alignment in this case is the same as CENTER
             for item in self.items:
-                item.set_y((self.height - item.height) / 2)
+                item.set_y((self.get_height() - item.get_height()) / 2)
         elif self.alignment_options.vertical == AligmentOptions.Vertical.TOP:
             for item in self.items:
                 item.set_y(0.0)
         elif self.alignment_options.vertical == AligmentOptions.Vertical.BOTTOM:
             for item in self.items:
-                item.set_y(self.height - item.height)
+                item.set_y(self.get_height() - item.get_height())
         elif self.alignment_options.vertical == AligmentOptions.Vertical.CENTER:
             for item in self.items:
-                item.set_y((self.height - item.height) / 2)
+                item.set_y((self.get_height() - item.get_height()) / 2)
     
     def horizontal_align(self) -> None:
         """Aligns the items horizontally based on the given alignment options."""
         if self.alignment_options.horizontal == AligmentOptions.Horizontal.UNIFORM:
-            gap = (self.width - sum(item.width for item in self.items)) / (len(self.items) + 1)
+            gap = (self.get_width() - sum(item.get_width() for item in self.items)) / (len(self.items) + 1)
             current_x = gap
             for item in self.items:
                 item.set_x(current_x)
@@ -138,7 +152,7 @@ class Row(Container):
                 item.set_x(current_x)
                 current_x += item.get_width() + self.alignment_options.gaps.horizontal
         elif self.alignment_options.horizontal == AligmentOptions.Horizontal.RIGHT:
-            current_x = self.width
+            current_x = self.get_width()
             for item in reversed(self.items):
                 current_x -= item.get_width()
                 item.set_x(current_x)
@@ -149,8 +163,14 @@ class Row(Container):
             for item in self.items:
                 item.set_x(current_x)
                 current_x += item.get_width() + self.alignment_options.gaps.horizontal
-                
-                
+
+    def render(self, pdf_page: fitz.Page, origin: tuple) -> None:
+        new_origin = self.get_absolute_origin(origin)
+        
+        for item in self.items:
+            item.render(pdf_page, new_origin)
+
+
 class ContainerWithRows(Container):
     def __init__(self, relative_coordinates: tuple, alignment_options: AligmentOptions, width: float = 0.0, height: float = 0.0, rows: List[Row] = None) -> None:
         self.alignment_options: AligmentOptions = alignment_options
@@ -236,13 +256,134 @@ class ContainerWithRows(Container):
         elif self.alignment_options.horizontal == AligmentOptions.Horizontal.CENTER:
             for row in self.rows:
                 row.set_x((self.width - row.width) / 2)
+    
+    def render(self, pdf_page: fitz.Page, origin: tuple[float, float]) -> None:
+        new_origin = self.get_absolute_origin(origin)
+        
+        for row in self.rows:
+            row.render(pdf_page, new_origin)
+            
+
+class Border(Container):
+    def __init__(self, border_options: BorderOptions, width: float, height: float, relative_coordinates: tuple) -> None:
+        super().__init__(width, height, relative_coordinates)
+        self.border_options: BorderOptions = border_options
+        
+    def to_dict(self) -> Dict[str, Any]:
+        """Returns the border as a dictionary."""
+        container_dict = super().to_dict()
+        container_dict.update({
+            "border_options": self.border_options
+        })
+        return container_dict
+    
+    def __repr__(self) -> str:
+        return f"Border(width={self.width}, height={self.height}, border_options={self.border_options})"
+    
+    @staticmethod
+    def create_empty() -> 'Border':
+        """Creates an empty border."""
+        return Border(border_options=BorderOptions(), width=0.0, height=0.0, relative_coordinates=(0.0, 0.0))
+
+    @staticmethod
+    def create_from_config(config: AlbumPages, parent: 'Page') -> 'Border':
+        """Creates a border from the given config."""
+        width = parent.width - parent.margin.get_horizontal()
+        height = parent.height - parent.margin.get_vertical()
+        relative_coordinates = (parent.margin.left, parent.margin.top)
+        
+        border_options = BorderOptions(
+            style=BorderOptions.Style(config.page_borders["style"]),
+            color=tuple(config.page_borders["color"]),
+            thickness=config.page_borders["thickness"]
+        )
+        
+        border = Border(border_options=border_options, width=width, height=height, relative_coordinates=relative_coordinates)
+        
+        return border
+    
+    def render(self, pdf_page: fitz.Page, origin: tuple) -> None:
+        """Renders the border on the given pdf page."""
+        x1, y1, x2, y2 = coordinates_to_points(self.get_absolute_coordinates(origin))
+        if self.border_options.style == BorderOptions.Style.NONE:
+            return
+        elif self.border_options.style == BorderOptions.Style.ONE_LINE:
+            pdf_page.draw_rect((x1, y1, x2, y2), color=self.border_options.color, width=self.border_options.thickness)
+        elif self.border_options.style == BorderOptions.Style.TWO_LINES:
+            pdf_page.draw_rect((x1, y1, x2, y2), color=self.border_options.color, width=self.border_options.thickness)
+            pdf_page.draw_rect((x1 + 2, y1 + 2, x2 - 2, y2 - 2), color=self.border_options.color, width=self.border_options.thickness / 2)
 
 
-class Page(ContainerWithRows):
-    def __init__(self, width: float, height: float, margin: Margin) -> None:
+class WorkingArea(ContainerWithRows):
+    def __init__(self, width: float, height: float, relative_coordinates: tuple, alignment_options: AligmentOptions, margin: Margin = None, rows: List[Row] = None) -> None:
+        super().__init__(relative_coordinates, alignment_options, width=width, height=height, rows=rows)
+        self.margin: Margin = margin if margin is not None else Margin()
+        self.rows: List[Row] = rows if rows is not None else []
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Returns the working area as a dictionary."""
+        container_dict = super().to_dict()
+        container_dict.update({
+            "margin": self.margin,
+        })
+        return container_dict
+    
+    def __repr__(self) -> str:
+        return f"WorkingArea(width={self.width}, height={self.height}, relative_coordinates={self.relative_coordinates}, margin={self.margin})"
+    
+    @staticmethod
+    def create_empty() -> 'WorkingArea':
+        """Creates an empty working area."""
+        return WorkingArea(width=0.0, height=0.0, relative_coordinates=(0.0, 0.0), alignment_options=AligmentOptions())
+    
+    @staticmethod
+    def create_from_config(config: AlbumPages, parent: 'Page') -> 'WorkingArea':
+        """Creates a working area from the given config."""
+        width = parent.width - parent.margin.get_horizontal()
+        height = parent.height - parent.margin.get_vertical()
+        relative_coordinates = (parent.margin.left, parent.margin.top)
+        alignment_options = AligmentOptions(
+            gaps=Gaps(
+                vertical=config.cont_vert_pad,
+                horizontal=config.cont_horiz_pad
+            ),
+            horizontal=AligmentOptions.Horizontal(config.cont_horiz_algmt),
+            vertical=AligmentOptions.Vertical(config.cont_vert_algmt),
+        )
+        margin = Margin(
+            left=config.working_margins["left"],
+            right=config.working_margins["right"],
+            top=config.working_margins["top"],
+            bottom=config.working_margins["bottom"]
+        )
+        
+        working_area = WorkingArea(
+            width=width,
+            height=height,
+            relative_coordinates=relative_coordinates,
+            alignment_options=alignment_options,
+            margin=margin
+        )
+        
+        return working_area
+        
+    def get_effective_width(self) -> float:
+        """Returns the effective width of the page."""
+        return self.width - self.margin.get_horizontal()
+    
+    def get_effective_height(self) -> float:
+        """Returns the effective height of the page."""
+        return self.height - self.margin.get_vertical()
+
+
+class Page(Container):
+    def __init__(self, width: float, height: float, margin: Margin = None, working_area: WorkingArea = None, border: Border = None) -> None:
         super().__init__(width, height, (0.0, 0.0))
-        self.margin: Margin = margin
+        self.margin: Margin = margin if margin is not None else Margin()
+        self.working_area: WorkingArea = working_area if working_area is not None else WorkingArea.create_empty()
+        self.border: Border = border if border is not None else Border.create_empty()
 
+        
     def to_dict(self) -> Dict[str, Any]:
         """Returns the page as a dictionary."""
         container_dict = super().to_dict()
@@ -253,6 +394,27 @@ class Page(ContainerWithRows):
 
     def __repr__(self) -> str:
         return f"Page(width={self.width}, height={self.height}, margin={self.margin})"
+    
+    @staticmethod
+    def create_from_config(config: AlbumPages) -> 'Page':
+        """Creates a page from the given config."""
+        width = config.paper_sizes["width"]
+        height = config.paper_sizes["height"]
+        margin = Margin(
+            left=config.page_margins["left"],
+            right=config.page_margins["right"],
+            top=config.page_margins["top"],
+            bottom=config.page_margins["bottom"]
+        )
+        
+        page = Page(width=width, height=height, margin=margin)
+        
+        border = Border.create_from_config(config, page)
+        working_area = WorkingArea.create_from_config(config, page)
+        page.border = border        
+        page.working_area = working_area
+            
+        return page
 
 
 class SeriesContainer(ContainerWithRows):
@@ -288,7 +450,12 @@ class SeriesContainer(ContainerWithRows):
     @staticmethod
     def _generate_container_with_minimum_height(series: Series, max_width: float, alignment_options: AligmentOptions, inclusive_max_width: bool = True) -> 'SeriesContainer':
         rows: List[Container] = []
-        current_row = Row(alignment_options=alignment_options, relative_coordinates=(0.0, 0.0))
+        row_alignment_options = AligmentOptions(
+            gaps=alignment_options.gaps,
+            horizontal=AligmentOptions.Horizontal.UNIFORM,
+            vertical=AligmentOptions.Vertical.BOTTOM
+        )
+        current_row = Row(alignment_options=row_alignment_options, relative_coordinates=(0.0, 0.0))
         
         current_x = 0.0
         current_y = 0.0
@@ -308,7 +475,7 @@ class SeriesContainer(ContainerWithRows):
                 current_x = 0.0
                 current_y += current_row.get_height() + alignment_options.gaps.vertical
                 rows.append(current_row)
-                current_row = Row(alignment_options=alignment_options, relative_coordinates=(0.0, current_y))
+                current_row = Row(alignment_options=row_alignment_options, relative_coordinates=(0.0, current_y))
             
             stamp_container = StampContainer(width=stamp.width, height=stamp.height, relative_coordinates=(current_x, 0.0), stamp=stamp)
             current_row.items.append(stamp_container)

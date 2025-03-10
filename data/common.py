@@ -20,3 +20,9 @@ formato_pdf = {
 }      
         
 width, height = formato_pdf["customized"].values()     # define in album_page_layout. By default "customized"
+
+def in_to_points(inches):
+    return inches * 72
+
+def coordinates_to_points(coordinates: tuple[float,float,float,float]):
+    return tuple(map(in_to_points, coordinates))

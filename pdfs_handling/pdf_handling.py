@@ -1,8 +1,22 @@
 import fitz  # PyMuPDF
 import os
 
+from data.common import in_to_points
 from data.models import AlbumPages
-from data.objects.containers import SeriesContainer
+from data.objects.containers import Page, SeriesContainer
+
+
+def create_pdf_from_pages(pages: list[Page]) -> fitz.Document:
+    pdf_document = fitz.open()
+    
+    for page in pages:
+        pdf_page = pdf_document.new_page(width=in_to_points(page.width), height=in_to_points(page.height))
+        
+        page.border.render(pdf_page=pdf_page, origin=(0.0, 0.0))
+        page.working_area.render(pdf_page=pdf_page, origin=(0.0, 0.0))
+        
+    return pdf_document
+        
 
 # create a pdf document. Locates serial containers in the pdf pages.
 def put_containers_in_pdf_pages(series__containers: list[SeriesContainer]):

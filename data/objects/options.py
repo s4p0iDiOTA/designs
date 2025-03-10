@@ -35,6 +35,14 @@ class Margin:
         
     def __repr__(self) -> str:
         return f"Margin(top={self.top}, bottom={self.bottom}, left={self.left}, right={self.right})"
+    
+    def get_vertical(self) -> float:
+        """Returns the vertical margin as a float."""
+        return self.top + self.bottom
+    
+    def get_horizontal(self) -> float:
+        """Returns the horizontal margin as a float."""
+        return self.left + self.right
 
 class AligmentOptions:
     class Horizontal(Enum):
@@ -49,8 +57,8 @@ class AligmentOptions:
         UNIFORM = "uniform"
         BOTTOM = "bottom"
     
-    def __init__(self, gaps: Gaps, horizontal: Horizontal = Horizontal.UNIFORM, vertical: Vertical = Vertical.UNIFORM) -> None:
-        self.gaps: Gaps = gaps
+    def __init__(self, gaps: Gaps = None, horizontal: Horizontal = Horizontal.CENTER, vertical: Vertical = Vertical.UNIFORM) -> None:
+        self.gaps: Gaps = gaps if gaps else Gaps()
         self.horizontal: 'AligmentOptions.Horizontal' = horizontal
         self.vertical: 'AligmentOptions.Vertical' = vertical
 
@@ -62,3 +70,26 @@ class AligmentOptions:
             "vertical": self.vertical,
         }
   
+class BorderOptions:
+    class Style(Enum):
+        NONE = ""
+        ONE_LINE = "fine_line"
+        TWO_LINES = "thick_fine_line"
+    
+    def __init__(self, style: Style = Style.NONE, color: tuple = (0,0,0), thickness: int = 0, margin: Margin = None) -> None:
+        self.style: 'BorderOptions.Style' = style
+        self.color: tuple = color
+        self.thickness: int = thickness
+        self.margin: Margin = margin if margin else Margin()
+        
+    def to_dict(self) -> Dict[str, Any]:
+        """Returns the border options as a dictionary."""
+        return {
+            "style": self.style.value,
+            "color": self.color,
+            "thickness": self.thickness,
+            "margin": self.margin.to_dict()
+        }
+    
+    def __repr__(self) -> str:
+        return f"BorderOptions(style={self.style}, color={self.color}, thickness={self.thickness}, margin={self.margin})"
