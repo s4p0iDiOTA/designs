@@ -66,36 +66,14 @@ class AlbumPages:
         self.working_area_width = self.page_width - self.working_margins["left"] - self.working_margins["right"]
         self.working_area_height = self.page_height - self.working_margins["top"] - self.working_margins["bottom"]
         self.working_area = ({"width": self.working_area_width, "height": self.working_area_height})
-          
+        
+        self.max_container_width = self.working_area_width        
         self.cont_horiz_pad= config_file["container_settings"]["horizontal_paddings"] 
         self.cont_vert_pad= config_file["container_settings"]["vertical_paddings"]
         self.cont_horiz_algmt= config_file["container_settings"]["horizontal_alignment"]
         self.cont_vert_algmt= config_file["container_settings"]["vertical_alignment"]
 
-        self.max_container_width = self.working_area_width
-
         self.stamp_padding = config_file["serial_stamps"]["stamp_padding"]
         self.stamps_horiz_alignment = config_file["serial_stamps"]["horizontal_alignment"]
 
-     # Get the page border coordinates based on border_options and paper_options.         
-    def get_page_borders(self) -> dict:
-        return {
-            "x1": self.page_margins["left"],
-            "y1": self.page_margins["top"],
-            "x2": self.paper_sizes["width"] - self.page_margins["right"],
-            "y2": self.paper_sizes["height"] - self.page_margins["bottom"]
-            }
     
-     # Get the working_area coordinates
-    def get_working_coordinates(self = None) -> dict:    # returns the working limits = None) -> None:
-        page=AlbumPages(None)
-        coord= self.get_page_borders()
-        x01, y01, x02, y02 = coord.values()
-        return {
-            "x1": x01 + page.working_margins["left"],       
-            "y1": y01 + page.working_margins["top"],
-            "x2": x02 - page.working_margins["right"],
-            #"x2": page.working_area_width,
-            "y2": y02 - page.working_margins["bottom"]
-            #"y2": page.working_area_height
-            }

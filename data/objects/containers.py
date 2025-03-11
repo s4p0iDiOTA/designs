@@ -445,6 +445,11 @@ class SeriesContainer(ContainerWithRows):
             return max(row.get_width() for row in self.rows)
         return 0.0
 
+    def render(self, pdf_page, origin):     # dibujar borde de la serie ____TEMPORAL_
+        x1, y1, x2, y2 = coordinates_to_points(self.get_absolute_coordinates(origin))
+        pdf_page.draw_rect((x1, y1, x2, y2), color=(0,1,0), width=1)     
+        return super().render(pdf_page, origin)
+
     # Finds the container for the stamps in the series that has the minimum height within a given width.
     # Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates to the container and some metadata.
     @staticmethod

@@ -1,12 +1,41 @@
-from file_operations.json_files_operations import save_json, validate_json_file
+from data.objects import save_json, validate_json_file
 
 # select or modify the test_data to create the file
 
 saving_directory_path = "albums\\_album_sample"
 
 #source_data:
+test_data = [{
+        "country": "Albania",
+        "name": "serie_that_fits_in_6.5",
+        "year": 1950,
+        "stamps": [
+            {
+                "height": 2,
+                "width": 1
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 2,
+                "width": 2
+            },
+            {
+                "height": 2.5,
+                "width": 1
+            },
+            {
+                "height": 1.5,
+                "width": 1.3
+            }
+        ]
+    }
+]   
 
-test_data = [ 
+
+test_data2 = [ 
     {
         "name": "serie_with_one_stamp", # caso1
         "year": "",
