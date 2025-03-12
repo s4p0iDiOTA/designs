@@ -8,7 +8,7 @@
     },
     "input_options": 
     {
-        "json_file_name": "multi_country_series_1950-1960",
+        "json_file_name": "large_series",
         "path": "_test_samples"
     }
 }

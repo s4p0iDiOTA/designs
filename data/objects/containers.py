@@ -262,7 +262,32 @@ class ContainerWithRows(Container):
         
         for row in self.rows:
             row.render(pdf_page, new_origin)
-            
+
+class Grid(Container):           # ____TEMPORAL_tool____
+    def __init__(self, width: float, height: float, relative_coordinates: tuple) -> None:
+        super().__init__(width, height, relative_coordinates)
+        self.line_separation = 0.1  # Separation between lines in inches
+
+    def render(self, pdf_page: fitz.Page, origin: tuple) -> None:
+        x1, y1, x2, y2 = coordinates_to_points(self.get_absolute_coordinates(origin))
+        line_separation_points = in_to_points(self.line_separation)
+
+        # Draw vertical lines
+        current_x = x1
+        while current_x <= x2:
+            p1= fitz.Point(current_x, y1)
+            p2= fitz.Point(current_x, y2)
+            pdf_page.draw_line(p1, p2, color=(0, 0, 1), stroke_opacity=0.05, width=1)
+            current_x += line_separation_points
+
+        # Draw horizontal lines
+        current_y = y1
+        while current_y <= y2:
+            p1= fitz.Point(x1, current_y)
+            p2= fitz.Point(x2, current_y)
+            pdf_page.draw_line(p1, p2, color=(0, 1, 0), stroke_opacity=0.05, width=1)     
+            current_y += line_separation_points
+     
 
 class Border(Container):
     def __init__(self, border_options: BorderOptions, width: float, height: float, relative_coordinates: tuple) -> None:
@@ -464,6 +489,7 @@ class SeriesContainer(ContainerWithRows):
         
         current_x = 0.0
         current_y = 0.0
+        _row_width = 0.0
         
         for stamp in series.stamps:
             width_with_stamp = current_x + stamp.width
@@ -477,9 +503,11 @@ class SeriesContainer(ContainerWithRows):
                 if not current_row.items and not rows:
                     return SeriesContainer(series=series, alignment_options=alignment_options)
                 
+                _row_width = current_row.get_width()      # para el alineamiento horiz de la siguiente fila
+                current_row.align()                       # alinea la fila actual
+                rows.append(current_row)
                 current_x = 0.0
                 current_y += current_row.get_height() + alignment_options.gaps.vertical
-                rows.append(current_row)
                 current_row = Row(alignment_options=row_alignment_options, relative_coordinates=(0.0, current_y))
             
             stamp_container = StampContainer(width=stamp.width, height=stamp.height, relative_coordinates=(current_x, 0.0), stamp=stamp)
@@ -487,7 +515,8 @@ class SeriesContainer(ContainerWithRows):
             
             current_x += stamp.width + alignment_options.gaps.horizontal
             
-        if current_row.items:
+        if current_row.items:                # more than one row
+            current_row.width = _row_width   # para que el alineamiento horiz de la ultima fila sea correcto
             current_row.align()
             rows.append(current_row)
             
