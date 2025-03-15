@@ -73,7 +73,8 @@ class AlbumPages:
         self.cont_horiz_algmt= config_file["container_settings"]["horizontal_alignment"]
         self.cont_vert_algmt= config_file["container_settings"]["vertical_alignment"]
 
-        self.stamp_padding = config_file["serial_stamps"]["stamp_padding"]
-        self.stamps_horiz_alignment = config_file["serial_stamps"]["horizontal_alignment"]
+        self.stamp_padding = config_file["stamps_settings"]["stamp_padding"]
+        self.stamps_horiz_alignment = config_file["stamps_settings"]["horizontal_alignment"]
+        self.stamps_vert_alignment = config_file["stamps_settings"]["vertical_alignment"]
 
     

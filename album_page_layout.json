@@ -25,18 +25,22 @@
         },
     "container_settings":
         {
-            "horizontal_alignment": "right",
-            "vertical_alignment": "top",
+            "horizontal_alignment": "left",
+            "vertical_alignment": "center",
             "horizontal_paddings": 0.5,
             "vertical_paddings": 0.5
         },
-    "serial_stamps": 
+    "stamps_settings": 
         {
         "stamp_padding": 0.5,
-        "horizontal_alignment": "justify"
+        "horizontal_alignment": "justify",
+        "vertical_alignment": "bottom"
         },
-           
+    
+
     "page types": "letter= 8.5x11, legal= 8.5x14, A4= 8.27x11.69, A3= 11.9x16.4, tabloid= 11x17, customized= modify in pdfs_handling.py",    
-    "page border styles": "fine_line, thick_fine_line, None"
+    "page border styles": "fine_line, thick_fine_line, None",
+    "horizontal alignments": "left, center, right, justify",
+    "vertical alignments": "top, center, bottom, uniform"
 }
 

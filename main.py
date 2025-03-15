@@ -15,12 +15,6 @@ generate_album_pages()
 
 
 
-"""
-TODO:
-- ¿Que hacer si el contenedor no cabe en una pagina?
-
-
-"""
 
 
 

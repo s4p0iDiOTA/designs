@@ -114,7 +114,7 @@ class Row(Container):
             return sum(item.width for item in self.items) + (len(self.items) - 1) * self.alignment_options.gaps.horizontal
         return 0.0
         
-    def align(self, alignment_options: AligmentOptions = None) -> None:
+    def align(self, alignment_options: AligmentOptions = None, out_spaced = False) -> None:
         """Aligns the row based on the given alignment options."""
         if alignment_options is not None:
             self.alignment_options = alignment_options
@@ -141,7 +141,7 @@ class Row(Container):
     def horizontal_align(self) -> None:
         """Aligns the items horizontally based on the given alignment options."""
         if self.alignment_options.horizontal == AligmentOptions.Horizontal.UNIFORM:
-            gap = (self.get_width() - sum(item.get_width() for item in self.items)) / (len(self.items) + 1)
+            gap=(self.get_width() - sum(item.get_width() for item in self.items)) / (len(self.items) + 1)
             current_x = gap
             for item in self.items:
                 item.set_x(current_x)
@@ -257,37 +257,33 @@ class ContainerWithRows(Container):
             for row in self.rows:
                 row.set_x((self.width - row.width) / 2)
     
-    def render(self, pdf_page: fitz.Page, origin: tuple[float, float]) -> None:
-        new_origin = self.get_absolute_origin(origin)
-        
-        for row in self.rows:
-            row.render(pdf_page, new_origin)
-
-class Grid(Container):           # ____TEMPORAL_tool____
-    def __init__(self, width: float, height: float, relative_coordinates: tuple) -> None:
-        super().__init__(width, height, relative_coordinates)
-        self.line_separation = 0.1  # Separation between lines in inches
-
-    def render(self, pdf_page: fitz.Page, origin: tuple) -> None:
-        x1, y1, x2, y2 = coordinates_to_points(self.get_absolute_coordinates(origin))
-        line_separation_points = in_to_points(self.line_separation)
+    def draw_grid(self, pdf_page: fitz.Page, origin: tuple, grid: float = 1, color: list =(0,1,0) ) -> None:
+        x1, y1, x2, y2 = coordinates_to_points(self.get_absolute_coordinates(origin))    
+        line_separation_points = in_to_points(grid)
 
         # Draw vertical lines
         current_x = x1
         while current_x <= x2:
             p1= fitz.Point(current_x, y1)
             p2= fitz.Point(current_x, y2)
-            pdf_page.draw_line(p1, p2, color=(0, 0, 1), stroke_opacity=0.05, width=1)
+            pdf_page.draw_line(p1, p2, color=color, stroke_opacity=0.05, width=1)
             current_x += line_separation_points
-
         # Draw horizontal lines
         current_y = y1
         while current_y <= y2:
             p1= fitz.Point(x1, current_y)
             p2= fitz.Point(x2, current_y)
-            pdf_page.draw_line(p1, p2, color=(0, 1, 0), stroke_opacity=0.05, width=1)     
+            pdf_page.draw_line(p1, p2, color=color, stroke_opacity=0.05, width=1)     
             current_y += line_separation_points
-     
+
+    def render(self, pdf_page: fitz.Page, origin: tuple[float, float], grid = False) -> None:
+        new_origin = self.get_absolute_origin(origin)
+        if grid: 
+            self.draw_grid(pdf_page, origin, 0.1, (0,1,0))    
+            self.draw_grid(pdf_page, origin, 1, (0,0,1))
+        
+        for row in self.rows:
+            row.render(pdf_page, new_origin)
 
 class Border(Container):
     def __init__(self, border_options: BorderOptions, width: float, height: float, relative_coordinates: tuple) -> None:
@@ -503,8 +499,8 @@ class SeriesContainer(ContainerWithRows):
                 if not current_row.items and not rows:
                     return SeriesContainer(series=series, alignment_options=alignment_options)
                 
-                _row_width = current_row.get_width()      # para el alineamiento horiz de la siguiente fila
-                current_row.align()                       # alinea la fila actual
+                ##_row_width = current_row.get_width()    # para el alineamiento horiz de la siguiente fila
+                ##current_row.horizontal_align(out_spaced=False)                   
                 rows.append(current_row)
                 current_x = 0.0
                 current_y += current_row.get_height() + alignment_options.gaps.vertical
@@ -515,10 +511,9 @@ class SeriesContainer(ContainerWithRows):
             
             current_x += stamp.width + alignment_options.gaps.horizontal
             
-        if current_row.items:                # more than one row
-            current_row.width = _row_width   # para que el alineamiento horiz de la ultima fila sea correcto
-            current_row.align()
+        if current_row.items:               
             rows.append(current_row)
+
             
         return SeriesContainer(series=series, alignment_options=alignment_options, rows=rows)
 
@@ -544,8 +539,15 @@ class SeriesContainer(ContainerWithRows):
             # If a smaller width was found, save it.
             elif next_container.get_width() < smallest_container.get_width():
                 smallest_container = next_container
-        
-        smallest_container.align()
+
+        # stamp containers alignment inside the rows
+        for row in smallest_container.rows:
+            row.vertical_align()
+            row.width= max(row.get_width() for row in smallest_container.rows)           
+            row.horizontal_align()
+
+
+        #smallest_container.align()
 
         return smallest_container
 

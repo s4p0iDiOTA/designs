@@ -3,7 +3,7 @@ import os
 
 from data.common import in_to_points
 from data.models import AlbumPages
-from data.objects.containers import Page, Grid
+from data.objects.containers import Page
 
 
 def create_pdf_from_pages(pages: list[Page]) -> fitz.Document:
@@ -12,10 +12,7 @@ def create_pdf_from_pages(pages: list[Page]) -> fitz.Document:
     for page in pages:
         pdf_page = pdf_document.new_page(width=in_to_points(page.width), height=in_to_points(page.height)) 
         page.border.render(pdf_page=pdf_page, origin=(0.0, 0.0))
-        page.working_area.render(pdf_page=pdf_page, origin=(0.0, 0.0))
-
-        grid = Grid(width=8.5, height=11, relative_coordinates=(0, 0))
-        grid.render(pdf_page, origin=(0, 0))  
+        page.working_area.render(pdf_page=pdf_page, origin=(0.0, 0.0), grid=True) 
            
     return pdf_document
         

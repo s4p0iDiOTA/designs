@@ -14,16 +14,15 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
 
     pages = []
     page = Page.create_from_config(config)
+    
     row_alignment_options = AligmentOptions(
         gaps=page.working_area.alignment_options.gaps,
         horizontal=AligmentOptions.Horizontal.UNIFORM,
-        vertical=AligmentOptions.Vertical.BOTTOM
-    )
-    row = Row(
-        alignment_options=row_alignment_options, 
+        vertical=AligmentOptions.Vertical.BOTTOM)
+    
+    row = Row(alignment_options=row_alignment_options, 
         relative_coordinates=(page.working_area.margin.left, page.working_area.margin.top),
-        width=page.working_area.get_effective_width()
-    )
+        width=page.working_area.get_effective_width())
     
     x_in_row = 0.0
     y_in_working_area = 0.0
@@ -31,45 +30,39 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
     for series_container in series__containers:
         # if the series_container doesn't fit horizontally, move to a new row:
         if x_in_row + series_container.width > row.width:
-            row.align()
+            row.vertical_align()      # vertical align the row with more than one container
             page.working_area.rows.append(row)
-            
             x_in_row = 0.0                                       
             y_in_working_area += row.get_height() + page.working_area.alignment_options.gaps.vertical
-            row = Row(
-                alignment_options=row_alignment_options, 
+            row = Row(alignment_options=row_alignment_options, 
                 relative_coordinates=(page.working_area.margin.left, y_in_working_area),
-                width=page.working_area.get_effective_width()
-            )
+                width=page.working_area.get_effective_width())
 
         # if the container doesn't fit vertically, change to a new page
         if y_in_working_area + series_container.height  > page.working_area.get_effective_height():
-            row.align()
-            page.working_area.rows.append(row)
-            page.working_area.align()
-            pages.append(page)
-            
+            #page.working_area.rows.append(row)    #pq aqui dejaria un row vacio al final de la pagina
+            pages.append(page)           
             x_in_row = page.working_area.margin.left                                         
             y_in_working_area = page.working_area.margin.top
-            row = Row(
-                alignment_options=row_alignment_options, 
+            row = Row(alignment_options=row_alignment_options, 
                 relative_coordinates=(page.working_area.margin.left, page.working_area.margin.top),
-                width=page.working_area.get_effective_width()
-            )
+                width=page.working_area.get_effective_width())
             page = Page.create_from_config(config)
-
 
         series_container.set_x(x_in_row)
         row.items.append(series_container)
-        x_in_row += series_container.width + page.working_area.alignment_options.gaps.horizontal
-        
-    if row.items:
-        row.align()
+        x_in_row += series_container.width + page.working_area.alignment_options.gaps.horizontal     
+    if row.items:  
         page.working_area.rows.append(row)
     if page.working_area.rows:
-        page.working_area.align()
         pages.append(page)
-        
+
+    # Aligment of rows with series_containers (columns) inside the pages
+    for page in pages:
+        for row in page.working_area.rows:
+            row.horizontal_align()
+        page.working_area.vertical_align()
+
     return pages
 
 # This function orchestrates the creation of album pages based on the content_options and the album_page_layout.
@@ -101,9 +94,9 @@ def generate_album_pages():
     page = Page.create_from_config(config)    
     max_width = page.working_area.get_effective_width()
     gaps = Gaps(vertical=config.cont_vert_pad, horizontal=config.cont_horiz_pad)
-    aligment_options = AligmentOptions(gaps=gaps, horizontal=config.cont_horiz_algmt, vertical=config.cont_vert_algmt)
-    series__containers = [SeriesContainer.create(series=series, max_width=max_width, alignment_options=aligment_options) for series in series_list]
-    
+    algmnt_opts = AligmentOptions(gaps=gaps, horizontal=config.cont_horiz_algmt, vertical=config.cont_vert_algmt)
+    series__containers = [SeriesContainer.create(series=series, max_width=max_width, alignment_options=algmnt_opts) for series in series_list]
+ 
     #Distribute containers in working_areas of sized pages, returning containers organized
     # across the width and height of the area. 
     pages = distribute_containers(series__containers, config)
