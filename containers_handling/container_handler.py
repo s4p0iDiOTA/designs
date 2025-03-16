@@ -3,7 +3,7 @@ from data.data_layer import validate_json_file, read_json, get_series
 from data.models import AlbumPages
 from data.objects.containers import Page, Row, SeriesContainer
 from data.objects.options import AligmentOptions, Gaps
-from pdfs_handling.pdf_handling import create_pdf_from_pages
+from pdfs_handling.pdf_handling import create_pdf_from_pages, conform_album_pages
 
 def distribute_containers(series__containers: list[SeriesContainer], config: AlbumPages) -> list[Page]:
     # Distributes as many series_containers as the working area can fit. 
@@ -30,7 +30,6 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
     for series_container in series__containers:
         # if the series_container doesn't fit horizontally, move to a new row:
         if x_in_row + series_container.width > row.width:
-            row.vertical_align()      # vertical align the row with more than one container
             page.working_area.rows.append(row)
             x_in_row = 0.0                                       
             y_in_working_area += row.get_height() + page.working_area.alignment_options.gaps.vertical
@@ -60,8 +59,10 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
     # Aligment of rows with series_containers (columns) inside the pages
     for page in pages:
         for row in page.working_area.rows:
-            row.horizontal_align()
-        page.working_area.vertical_align()
+            row.vertical_align()                    # vertical align the row with more than one container 
+            row.horizontal_align()                  # horizontal align the containers in the row 
+      # page.working_area.horizontal_align()        # horizontal align the rows-containers in the pages   (?)      
+        page.working_area.vertical_align()          # vertical align the rows-containers in the pages 
 
     return pages
 
@@ -90,30 +91,37 @@ def generate_album_pages():
     # Get stamp series from data source based on the provided content options.  
     series_list = get_series(content_options)
         
-    # Distribute stamp series in rows inside the containers of optimized dimensions within the work area.
+    # Locate stamp series in rows inside the containers of optimized dimensions within the work area.
+    # when the containers don't fit in the work area, they are split in two or more working spaces. 
     page = Page.create_from_config(config)    
     max_width = page.working_area.get_effective_width()
+    max_height = page.working_area.get_effective_height()
     gaps = Gaps(vertical=config.cont_vert_pad, horizontal=config.cont_horiz_pad)
     algmnt_opts = AligmentOptions(gaps=gaps, horizontal=config.cont_horiz_algmt, vertical=config.cont_vert_algmt)
-    #series__containers = [SeriesContainer.create(series=series, max_width=max_width, alignment_options=algmnt_opts) for series in series_list]
+    ##series__containers = [SeriesContainer.create(series=series, max_width=max_width, max_height=max_height, alignment_options=algmnt_opts) for series in series_list]
+    # revisar si se puede hacer en SeriesContainer.. create() line 562.. si no eliminar max_height
     series__containers = []
     for series in series_list:
-        smallest_container= [SeriesContainer.create(series=series, max_width=max_width, alignment_options=algmnt_opts)]
-        height= smallest_container[0].height
-        if height > config.working_area_height:
-            splitted_containers= SeriesContainer.split_container(smallest_container=smallest_container, series=series, alignment_options=algmnt_opts, max_height=config.working_area_height)
-            series__containers = series__containers + splitted_containers
+        series_container= [SeriesContainer.create(series=series, max_width=max_width, max_height=max_height, alignment_options=algmnt_opts)]       
+        container_height= series_container[0].height
+        if container_height > max_height: 
+            splitted_containers= SeriesContainer.split_container(series_container=series_container, series=series, alignment_options=algmnt_opts, max_height=max_height)
+            series__containers.extend(splitted_containers)
+            #series__containers = series__containers + splitted_containers
         else:
-            series__containers.extend(smallest_container)
-
+            series__containers.extend(series_container)
+    
     #Distribute containers in working_areas of sized pages, returning containers organized
     # across the width and height of the area. 
     pages = distribute_containers(series__containers, config)
     
     #Print the album pages to a PDF
-    #document = put_containers_in_pdf_pages(series__containers)  
-    #conform_album_pages(document, content_options) 
     pdf = create_pdf_from_pages(pages)
+
+    # Add page number.. etc ... TMP
+    ##pdf = conform_album_pages(pdf, content_options)
+
+    #save the pdf document
     output_file_name = content_options["output_options"]["file_name"]
     output_file_path = content_options["output_options"]["path"]
     try:

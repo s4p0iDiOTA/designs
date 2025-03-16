@@ -517,34 +517,31 @@ class SeriesContainer(ContainerWithRows):
 
     # For the case when the smallest_container does not fit in the working area height
     @staticmethod
-    def split_container(smallest_container: 'SeriesContainer', series: Series, alignment_options: AligmentOptions, max_height ) -> List['SeriesContainer']:
-
-        splitted_container = []
+    def split_container(series_container: List['SeriesContainer'], series: Series, alignment_options: AligmentOptions, max_height: float) -> List['SeriesContainer']:
+        splitted_containers = []
         current_rows = []
         current_height = 0.0
-
-        for row in smallest_container.rows:
+        
+        for row in series_container[0].rows:
             row_height = row.get_height() + alignment_options.gaps.vertical
             if current_height + row_height > max_height:
-                current_rows.vertical_align()
-                splitted_container.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
+                splitted_containers.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
                 current_rows = []
                 current_height = 0.0
             current_rows.append(row)
             current_height += row_height
                         
         if current_rows:
-            current_rows.vertical_align()
-            splitted_container.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
-
-        return splitted_container
+            splitted_containers.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
+            
+        return splitted_containers   
 
 
     # Finds the container for the stamps in the series with the minimum height and minimum width for that height.
     # Returns a container with a height, width and a list of Stamps. Each Stamp has a rect with relative coordinates
     # to the container and some metadata.
     @staticmethod
-    def create(series: Series, max_width: float, alignment_options: AligmentOptions) -> 'SeriesContainer':        
+    def create(series: Series, max_width: float, max_height: float, alignment_options: AligmentOptions) -> 'SeriesContainer':        
         # Do a first run to find the optimal height and initial width.
         smallest_container = SeriesContainer._generate_container_with_minimum_height(series, max_width, alignment_options, True)
 
@@ -562,6 +559,11 @@ class SeriesContainer(ContainerWithRows):
             elif next_container.get_width() < smallest_container.get_width():
                 smallest_container = next_container
    
+        # Case when the smallest_container does not fit in the working area height     !!!Rev.!!
+        if smallest_container.get_height() > max_height:
+           # return SeriesContainer.split_container(smallest_container, series, alignment_options, max_height)
+           pass 
+
         # stamp containers alignment inside the rows
         for row in smallest_container.rows:
             row.vertical_align()
