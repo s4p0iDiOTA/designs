@@ -95,8 +95,17 @@ def generate_album_pages():
     max_width = page.working_area.get_effective_width()
     gaps = Gaps(vertical=config.cont_vert_pad, horizontal=config.cont_horiz_pad)
     algmnt_opts = AligmentOptions(gaps=gaps, horizontal=config.cont_horiz_algmt, vertical=config.cont_vert_algmt)
-    series__containers = [SeriesContainer.create(series=series, max_width=max_width, alignment_options=algmnt_opts) for series in series_list]
- 
+    #series__containers = [SeriesContainer.create(series=series, max_width=max_width, alignment_options=algmnt_opts) for series in series_list]
+    series__containers = []
+    for series in series_list:
+        smallest_container= [SeriesContainer.create(series=series, max_width=max_width, alignment_options=algmnt_opts)]
+        height= smallest_container[0].height
+        if height > config.working_area_height:
+            splitted_containers= SeriesContainer.split_container(smallest_container=smallest_container, series=series, alignment_options=algmnt_opts, max_height=config.working_area_height)
+            series__containers = series__containers + splitted_containers
+        else:
+            series__containers.extend(smallest_container)
+
     #Distribute containers in working_areas of sized pages, returning containers organized
     # across the width and height of the area. 
     pages = distribute_containers(series__containers, config)

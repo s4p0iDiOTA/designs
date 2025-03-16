@@ -497,10 +497,7 @@ class SeriesContainer(ContainerWithRows):
                 # a stamp other than the first is wider than the max_width.
                 # Check if this happened on the first item. If so, return an empty container.
                 if not current_row.items and not rows:
-                    return SeriesContainer(series=series, alignment_options=alignment_options)
-                
-                ##_row_width = current_row.get_width()    # para el alineamiento horiz de la siguiente fila
-                ##current_row.horizontal_align(out_spaced=False)                   
+                    return SeriesContainer(series=series, alignment_options=alignment_options)              
                 rows.append(current_row)
                 current_x = 0.0
                 current_y += current_row.get_height() + alignment_options.gaps.vertical
@@ -516,6 +513,31 @@ class SeriesContainer(ContainerWithRows):
 
             
         return SeriesContainer(series=series, alignment_options=alignment_options, rows=rows)
+
+
+    # For the case when the smallest_container does not fit in the working area height
+    @staticmethod
+    def split_container(smallest_container: 'SeriesContainer', series: Series, alignment_options: AligmentOptions, max_height ) -> List['SeriesContainer']:
+
+        splitted_container = []
+        current_rows = []
+        current_height = 0.0
+
+        for row in smallest_container.rows:
+            row_height = row.get_height() + alignment_options.gaps.vertical
+            if current_height + row_height > max_height:
+                current_rows.vertical_align()
+                splitted_container.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
+                current_rows = []
+                current_height = 0.0
+            current_rows.append(row)
+            current_height += row_height
+                        
+        if current_rows:
+            current_rows.vertical_align()
+            splitted_container.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
+
+        return splitted_container
 
 
     # Finds the container for the stamps in the series with the minimum height and minimum width for that height.
@@ -539,17 +561,14 @@ class SeriesContainer(ContainerWithRows):
             # If a smaller width was found, save it.
             elif next_container.get_width() < smallest_container.get_width():
                 smallest_container = next_container
-
+   
         # stamp containers alignment inside the rows
         for row in smallest_container.rows:
             row.vertical_align()
             row.width= max(row.get_width() for row in smallest_container.rows)           
             row.horizontal_align()
 
-
-        #smallest_container.align()
-
-        return smallest_container
+        return smallest_container 
 
 
 class StampContainer(Container):
