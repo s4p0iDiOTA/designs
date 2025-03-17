@@ -1,46 +1,96 @@
 {
-    "page_options": 
-        {
-        "paper_type" : "letter", 
-        "page_margins": 
-            {
+    "page_options": {
+        "paper_type": "legal",
+        "page_margins": {
             "left": 0.25,
             "right": 0.25,
             "top": 0.25,
             "bottom": 0.25
-            },
-        "page_borders" : 
-            {
+        },
+        "page_borders": {
             "style": "thick_fine_line",
             "thickness": 1,
-            "color": [0,0,0]
-            },          
-        "work_area_margins": 
-            {
+            "color": [
+                0,
+                0,
+                0
+            ]
+        },
+        "album title: ": {
+            "show": true,
+            "position": "top_center",
+            "font": "Arial",
+            "font_size": 14,        
+            "color": [
+                0,
+                0,
+                0
+            ]
+        },
+        "series_name": {
+            "show": true,
+            "position": "top_center",
+            "font": "Arial",
+            "font_size": 10,        
+            "color": [
+                0,
+                0,
+                0
+            ]
+        },
+        "series_bordered": {
+            "show": true,
+            "style": "fine_line",
+            "thickness": 1,   
+            "color": [
+                0,
+                0,
+                0
+            ]
+        },           
+        "stamp_name": {
+            "show": true,
+            "position": "bottom_center",
+            "font": "Arial",
+            "font_size": 8,        
+            "color": [
+                0,
+                0,
+                0
+            ]
+        },
+        "stamps_bordered": {
+            "show": true,
+            "style": "fine_line",
+            "thickness": 1,   
+            "color": [
+                0,
+                0,
+                0
+            ]
+        },      
+        "page_numbers": {
+            "show": true,
+            "position": "top_center",
+            "font": "Arial",
+            "font_size": 12    
+        },
+        "work_area_margins": {
             "left": 0.2,
-            "right": 0.2,  
+            "right": 0.2,
             "top": 1,
-            "bottom": 0.2           
-            }
-        },
-    "container_settings":
-        {
-            "horizontal_alignment": "uniform",
-            "vertical_alignment": "center",
-            "horizontal_paddings": 0.5,
-            "vertical_paddings": 0.5
-        },
-    "stamps_settings": 
-        {
+            "bottom": 0.2
+        }
+    },
+    "container_settings": {
+        "horizontal_alignment": "uniform",
+        "vertical_alignment": "uniform",
+        "horizontal_paddings": 0.5,
+        "vertical_paddings": 0.5
+    },
+    "stamps_settings": {
         "stamp_padding": 0.5,
         "horizontal_alignment": "justify",
         "vertical_alignment": "bottom"
-        },
-    
-
-    "page types": "letter= 8.5x11, legal= 8.5x14, A4= 8.27x11.69, A3= 11.9x16.4, tabloid= 11x17, customized= modify in pdfs_handling.py",    
-    "page border styles": "fine_line, thick_fine_line, None",
-    "horizontal alignments": "left, center, right, justify",
-    "vertical alignments": "top, center, bottom, uniform"
+    }
 }
-

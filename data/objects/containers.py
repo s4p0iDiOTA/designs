@@ -510,8 +510,7 @@ class SeriesContainer(ContainerWithRows):
             
         if current_row.items:               
             rows.append(current_row)
-
-            
+          
         return SeriesContainer(series=series, alignment_options=alignment_options, rows=rows)
 
 
@@ -524,10 +523,12 @@ class SeriesContainer(ContainerWithRows):
         
         for row in series_container[0].rows:
             row_height = row.get_height() + alignment_options.gaps.vertical
+            row.set_y(current_height)
             if current_height + row_height > max_height:
-                splitted_containers.append(SeriesContainer(series=series, alignment_options=alignment_options, rows=current_rows))
+                splitted_containers.append(SeriesContainer(series=series, alignment_options=alignment_options, relative_coordinates=(0.0, 0.0), rows=current_rows))
                 current_rows = []
                 current_height = 0.0
+                row.set_y(0.0)
             current_rows.append(row)
             current_height += row_height
                         

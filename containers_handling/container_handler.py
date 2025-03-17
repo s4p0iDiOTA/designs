@@ -51,6 +51,7 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
         series_container.set_x(x_in_row)
         row.items.append(series_container)
         x_in_row += series_container.width + page.working_area.alignment_options.gaps.horizontal     
+  
     if row.items:  
         page.working_area.rows.append(row)
     if page.working_area.rows:
@@ -91,15 +92,18 @@ def generate_album_pages():
     # Get stamp series from data source based on the provided content options.  
     series_list = get_series(content_options)
         
-    # Locate stamp series in rows inside the containers of optimized dimensions within the work area.
-    # when the containers don't fit in the work area, they are split in two or more working spaces. 
+    # Create a page object from the AlbumPages object and configure the working area 
     page = Page.create_from_config(config)    
     max_width = page.working_area.get_effective_width()
     max_height = page.working_area.get_effective_height()
     gaps = Gaps(vertical=config.cont_vert_pad, horizontal=config.cont_horiz_pad)
     algmnt_opts = AligmentOptions(gaps=gaps, horizontal=config.cont_horiz_algmt, vertical=config.cont_vert_algmt)
+
     ##series__containers = [SeriesContainer.create(series=series, max_width=max_width, max_height=max_height, alignment_options=algmnt_opts) for series in series_list]
-    # revisar si se puede hacer en SeriesContainer.. create() line 562.. si no eliminar max_height
+    # ver si se logra incluir la llamada a split_container desde: SeriesContainer.. create() line 563.. (si sí eliminar max_height de la llamadaa create)
+    # si no:
+     
+    # create series containers and split them if they don't fit in the working area: 
     series__containers = []
     for series in series_list:
         series_container= [SeriesContainer.create(series=series, max_width=max_width, max_height=max_height, alignment_options=algmnt_opts)]       
@@ -107,12 +111,10 @@ def generate_album_pages():
         if container_height > max_height: 
             splitted_containers= SeriesContainer.split_container(series_container=series_container, series=series, alignment_options=algmnt_opts, max_height=max_height)
             series__containers.extend(splitted_containers)
-            #series__containers = series__containers + splitted_containers
         else:
             series__containers.extend(series_container)
-    
-    #Distribute containers in working_areas of sized pages, returning containers organized
-    # across the width and height of the area. 
+
+    #Distribute containers in working_areas of sized pages, returning containers aligned:
     pages = distribute_containers(series__containers, config)
     
     #Print the album pages to a PDF
@@ -131,4 +133,39 @@ def generate_album_pages():
     pdf_document_path = os.path.join(output_file_path, output_file_name)
     pdf.save(pdf_document_path)
     pdf.close()
+
+
+
+
+
+
+
+{
+  "configurations": [
+    {
+      "type": "debugpy",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/${input:programPath}"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "pickString",
+      "id": "programPath",
+      "description": "Select the Python file to debug",
+      "options": [
+        "main.py",
+        "_test_samples/create_test_data.py",
+        "containers_handling/container_handler.py",
+        "data/common.py",
+        "data/data_layer.py",
+        "data/models.py",
+        "modules_tests/container/test_container.py",
+        "modules_tests/pdfs/test_pdf_handling.py",
+        "pdfs_handling/pdf_handling.py"
+      ]
+    }
+  ]
+}
 

@@ -328,29 +328,6 @@
         ]
         },
         {
-        "country": "Albania",
-        "name": "serie_that_should_be_narrow",
-        "year": 1953,
-        "stamps": [
-            {
-                "height": 1.4,
-                "width": 3.2
-            },
-            {
-                "height": 2.4,
-                "width": 0.5
-            },
-            {
-                "height": 1.5,
-                "width": 0.8
-            },
-            {
-                "height": 2.1,
-                "width": 1.2
-            }
-        ]
-        },
-        {
         "country": "Cuba",
         "name": "serie_that_fits_in_6.5",
         "year": 1959,
@@ -371,7 +348,7 @@
         },
         {
         "country": "Albania",
-        "name": "serie_that_should_be_wide",
+        "name": "serie ancha con 6 sellos",
         "year": 1966,
         "stamps": [
             {
@@ -510,7 +487,30 @@
                 "height": 1,
                 "width": 2
             }
-            ]
-        }
+        ]
+        },
+        {
+        "country": "Albania",
+        "name": "serie posterior a la splitted",
+        "year": 1953,
+        "stamps": [
+            {
+                "height": 1.4,
+                "width": 3.2
+            },
+            {
+                "height": 2.4,
+                "width": 0.5
+            },
+            {
+                "height": 1.5,
+                "width": 0.8
+            },
+            {
+                "height": 2.1,
+                "width": 1.2
+            }
+        ]
+        }          
 ]
     

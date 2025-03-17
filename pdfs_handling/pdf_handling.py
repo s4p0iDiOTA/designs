@@ -16,7 +16,7 @@ def create_pdf_from_pages(pages: list[Page]) -> fitz.Document:
            
     return pdf_document
         
-def conform_album_pages(pdf, content_options: dict) -> None:  #___ TMP
+def conform_album_pages(pdf, content_options: dict) -> None:  #___ TMP  
    
     doc= fitz.open(pdf)
 
