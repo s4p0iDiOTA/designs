@@ -61,17 +61,17 @@ class AlbumPages:
         self.page_borders= config_file["page_options"]["page_borders"]
         self.page_width = self.paper_sizes["width"] - self.page_margins["left"] - self.page_margins["right"]
         self.page_height = self.paper_sizes["height"] - self.page_margins["top"] - self.page_margins["bottom"]
+        self.page_numbers = config_file["page_options"]["page_numbers"]
 
-        self.working_margins = config_file["page_options"]["work_area_margins"]
+        self.working_margins = config_file["work_area"]["margins"]
         self.working_area_width = self.page_width - self.working_margins["left"] - self.working_margins["right"]
         self.working_area_height = self.page_height - self.working_margins["top"] - self.working_margins["bottom"]
-        self.working_area = ({"width": self.working_area_width, "height": self.working_area_height})
-        
+        self.working_area = ({"width": self.working_area_width, "height": self.working_area_height}) 
         self.max_container_width = self.working_area_width        
-        self.cont_horiz_pad= config_file["container_settings"]["horizontal_paddings"] 
-        self.cont_vert_pad= config_file["container_settings"]["vertical_paddings"]
-        self.cont_horiz_algmt= config_file["container_settings"]["horizontal_alignment"]
-        self.cont_vert_algmt= config_file["container_settings"]["vertical_alignment"]
+        self.cont_horiz_pad= config_file["work_area"]["container_settings"]["horizontal_paddings"] 
+        self.cont_vert_pad= config_file["work_area"]["container_settings"]["vertical_paddings"]
+        self.cont_horiz_algmt= config_file["work_area"]["container_settings"]["horizontal_alignment"]
+        self.cont_vert_algmt= config_file["work_area"]["container_settings"]["vertical_alignment"]
 
         self.stamp_padding = config_file["stamps_settings"]["stamp_padding"]
         self.stamps_horiz_alignment = config_file["stamps_settings"]["horizontal_alignment"]

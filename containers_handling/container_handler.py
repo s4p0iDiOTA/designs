@@ -3,7 +3,7 @@ from data.data_layer import validate_json_file, read_json, get_series
 from data.models import AlbumPages
 from data.objects.containers import Page, Row, SeriesContainer
 from data.objects.options import AligmentOptions, Gaps
-from pdfs_handling.pdf_handling import create_pdf_from_pages, conform_album_pages
+from pdfs_handling.pdf_handling import create_pdf_from_pages, album_pages_design
 
 def distribute_containers(series__containers: list[SeriesContainer], config: AlbumPages) -> list[Page]:
     # Distributes as many series_containers as the working area can fit. 
@@ -118,10 +118,10 @@ def generate_album_pages():
     pages = distribute_containers(series__containers, config)
     
     #Print the album pages to a PDF
-    pdf = create_pdf_from_pages(pages)
+    pdf_document = create_pdf_from_pages(pages)
 
     # Add page number.. etc ... TMP
-    ##pdf = conform_album_pages(pdf, content_options)
+    album = album_pages_design(pdf_document, config)  #___ TMP
 
     #save the pdf document
     output_file_name = content_options["output_options"]["file_name"]
@@ -131,8 +131,8 @@ def generate_album_pages():
     except FileExistsError:
         pass
     pdf_document_path = os.path.join(output_file_path, output_file_name)
-    pdf.save(pdf_document_path)
-    pdf.close()
+    album.save(pdf_document_path)
+    album.close()
 
 
 

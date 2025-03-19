@@ -16,10 +16,11 @@ def create_pdf_from_pages(pages: list[Page]) -> fitz.Document:
            
     return pdf_document
         
-def conform_album_pages(pdf, content_options: dict) -> None:  #___ TMP  
+def album_pages_design(pdf_document, config) -> None:  #___ TMP  
    
-    doc= fitz.open(pdf)
+    doc= fitz.open(pdf_document)
 
+    
     # Add Page number
     for _page_num in range(doc.page_count):
         page = doc[_page_num]
