@@ -2,10 +2,12 @@ import json
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
+from tkinter.colorchooser import askcolor  
+
 
 # File paths
 input_file_path = 'album_page_layout.json'
-output_file_path = 'album_page_layout_inputs.json'
+output_file_path = 'album_page_layout.json'
 
 def read_json(file_path):
     with open(file_path, 'r') as file:
@@ -31,7 +33,8 @@ class JsonEditorApp(tk.Tk):
             "page_orientation": ["protrait", "landscape"],
             "font": ["Arial", "Default"],
             "horizontal_alignment": ["left", "center", "right", "uniform"],
-            "vertical_alignment": ["top", "center", "bottom", "uniform"]
+            "vertical_alignment": ["top", "center", "bottom", "uniform"],
+            "arrange by": ["year", "face value","catalog_ord"]
         }
         self.create_widgets()
 
@@ -67,11 +70,19 @@ class JsonEditorApp(tk.Tk):
             entry.place(x=bbox[2], y=bbox[1])
         self.entry_widgets[node] = entry
 
+    def get_full_key_path(self, item):
+        key_path = []
+        while item:
+            key_path.insert(0, self.tree.item(item, "text"))
+            item = self.tree.parent(item)
+        return ".".join(key_path)
+
     def on_double_click(self, event):
         item = self.tree.selection()[0]
+        key_path = self.get_full_key_path(item)  # Get the full key path
         key = self.tree.item(item, "text")
         value = self.tree.item(item, "values")[0] if self.tree.item(item, "values") else ""
-        
+
         if key in self.radio_buttons:
             self.show_radio_buttons(item, key, value)
         else:
@@ -81,7 +92,7 @@ class JsonEditorApp(tk.Tk):
                 if item in self.entry_widgets:
                     self.entry_widgets[item].delete(0, tk.END)
                     self.entry_widgets[item].insert(0, new_value)
-                self.update_data(self.data, key, new_value)
+                self.update_data(self.data, key_path, new_value)
             
     def show_radio_buttons(self, item, key, value):
         options = self.radio_buttons.get(key, [])
@@ -128,22 +139,42 @@ class JsonEditorApp(tk.Tk):
         frame.destroy()
 
     def prompt_for_value(self, key, value):
-        # Use the main window (self) as the parent for the dialog
-        new_value = simpledialog.askstring("Input", f"Enter value for {key}:", initialvalue=value, parent=self)
-        return new_value
+        # Check if the key corresponds to a color input
+        if "color" in key.lower():
+            # Open the color chooser dialog
+            color = askcolor(title=f"Select color for {key}", parent=self)
+            if color[0]:  # If a color is selected
+                # Convert the RGB values to floats between 0.0 and 1.0
+                rgb_color = tuple(map(lambda x: round(x / 255, 3), color[0]))
+                print(f"Selected color for {key}: {rgb_color}")
+                return rgb_color
+            else:
+                # If no color is selected, return the original value
+                return value
+        else:
+            # Use simpledialog for non-color inputs
+            new_value = simpledialog.askstring("Input", f"Enter value for {key}:", initialvalue=value, parent=self)
+            return new_value
 
-    def update_data(self, data, key, new_value):
-        for k, v in data.items():
-            if k == key:
-                data[k] = new_value
-                return
-            elif isinstance(v, dict):
-                self.update_data(v, key, new_value)
+    def update_data(self, data, key_path, new_value):
+        keys = key_path.split(".")  # Split the key path into individual keys
+        current_key = keys[0]
+
+        if len(keys) == 1:
+            # If this is the last key in the path, update its value
+            if current_key in data:
+                data[current_key] = new_value
+            return
+
+        # If there are more keys in the path, recurse into the nested dictionary
+        if current_key in data and isinstance(data[current_key], dict):
+            self.update_data(data[current_key], ".".join(keys[1:]), new_value)
 
     def save_data(self):
-        self.data["page_options"]["paper_type"] = self.paper_type_var.get()
+        # Save the data to the output file
         write_json(output_file_path, self.data)
         messagebox.showinfo("Info", f"Updated data saved to {output_file_path}")
+        self.destroy()  # Close the application 
 
 def main():
     if os.path.exists(input_file_path):
