@@ -1,62 +1,46 @@
 {
     "page_options": {
-        "paper_type": "A4",
+        "paper_type": "legal",
         "page_margins": {
             "left": 0.25,
             "right": 0.25,
             "top": 0.25,
             "bottom": 0.25
         },
-        "page_orientation": "portrait",
+        "page_orientation": "portrait", 
         "page_borders": {
             "style": "thick_fine_line",
             "thickness": 1,
-            "color": [
-                0.882,
-                0.012,
-                0.118
-            ]
+            "color": [0,0,0]
         },
         "page_numbers": {
             "show": true,
             "pg_num_position": "bottom_center",
             "font": "Arial",
-            "font_size": 12
-        },
+            "font_size": 12    
+        },       
         "album_title": {
             "show": true,
             "position": "top_center",
             "font": "Arial",
-            "font_size": 14,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
+            "font_size": 14,        
+            "color": [0,0,0]
+        }, 
         "album_subtitle": {
             "show": true,
             "position": "top_center",
             "font": "Arial",
-            "font_size": 12,
-            "color": [
-                1.0,
-                1.0,
-                0.0
-            ]
+            "font_size": 12,        
+            "color": [0,0,0]
         },
         "album_description": {
             "show": true,
             "position": "top_center",
             "font": "Arial",
-            "font_size": 10,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
+            "font_size": 10,        
+            "color": [0,0,0]
         }
-    },
+    }, 
     "work_area": {
         "margins": {
             "left": 0.2,
@@ -68,29 +52,21 @@
             "horizontal_alignment": "uniform",
             "vertical_alignment": "uniform",
             "horizontal_paddings": 0.5,
-            "vertical_paddings": 0.5,
-            "border": {
-                "show": true,
-                "style": "fine_line",
-                "thickness": 1,
-                "color": [
-                    0.0,
-                    0.0,
-                    0.0
-                ]
-            },
-            "series_name": {
+            "vertical_paddings": 0.5
+        },
+        "series_name": {
                 "show": true,
                 "position": "top_center",
                 "font": "Arial",
-                "font_size": 10,
-                "color": [
-                    0.0,
-                    0.0,
-                    0.0
-                ]
-            }
-        }
+                "font_size": 10,        
+                "color": [0,0,0],
+        "series_bordered": {
+                    "show": true,
+                    "style": "fine_line",
+                    "thickness": 1,   
+                    "color": [0,0,0]
+                } 
+        }              
     },
     "stamps_settings": {
         "stamp_padding": 0.5,
@@ -99,87 +75,46 @@
         "stamp_container_border": {
             "show": true,
             "style": "fine_line",
-            "thickness": 1,
-            "color": [
-                0.0,
-                0.0,
-                1.0
-            ]
-        },
-        "arrange by": "year",
+            "thickness": 1,   
+            "color": [0,0,0] },
         "stamp_container_pattern": {
             "show": true,
             "pattern": "grid",
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
+            "color": [0,0,0] },
         "stamp_container_background": {
             "show": true,
-            "color": [
-                0.0,
-                0.502,
-                1.0
-            ]
-        },
+            "color": [255,255,255] },
         "stamp_border": {
-            "show": true,
-            "style": "fine_line",
-            "thickness": 1,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
+                "show": true,
+                "style": "fine_line",
+                "thickness": 1,   
+                "color": [0,0,0] },    
         "stamp_name": {
-            "show": true,
-            "st_name_position": "bottom_center",
-            "font": "Arial",
-            "font_size": 8,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
-        "stamp_number": {
-            "show": true,
-            "st_num_position": "center",
-            "font": "Arial",
-            "font_size": 8,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
+                "show": true,
+                "st_name_position": "bottom_center",
+                "font": "Arial",
+                "font_size": 8,        
+                "color": [0,0,0] },
+        "stamp_number": {         
+                "show": true,
+                "st_num_position": "center",
+                "font": "Arial",
+                "font_size": 8,        
+                "color": [0,0,0] },
         "stamp_date": {
-            "show": true,
-            "st_date_position": "top_center",
-            "font": "Arial",
-            "font_size": 8,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
+                "show": true,
+                "st_date_position": "top_center",
+                "font": "Arial",
+                "font_size": 8,        
+                "color": [0,0,0] },
         "stamp_description": {
-            "show": true,
-            "st_desc_position": "bottom_center",
-            "font": "Arial",
-            "font_size": 8,
-            "color": [
-                0.0,
-                0.0,
-                0.0
-            ]
-        },
-        "stamp_image": {
-            "show": true
+                "show": true,
+                "st_desc_position": "bottom_center",
+                "font": "Arial",
+                "font_size": 8,        
+                "color": [0,0,0] },               
+        "stamp_image": {         
+                "show": true     
         }
     }
 }
