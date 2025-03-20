@@ -12,9 +12,9 @@
             "style": "thick_fine_line",
             "thickness": 1,
             "color": [
-                0.882,
-                0.012,
-                0.118
+                0,
+                0,
+                0
             ]
         },
         "page_numbers": {
@@ -29,9 +29,9 @@
             "font": "Arial",
             "font_size": 14,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "album_subtitle": {
@@ -40,9 +40,9 @@
             "font": "Arial",
             "font_size": 12,
             "color": [
-                1.0,
-                1.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "album_description": {
@@ -51,9 +51,9 @@
             "font": "Arial",
             "font_size": 10,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         }
     },
@@ -68,26 +68,26 @@
             "horizontal_alignment": "uniform",
             "vertical_alignment": "uniform",
             "horizontal_paddings": 0.5,
-            "vertical_paddings": 0.5,
-            "border": {
+            "vertical_paddings": 0.5
+        },
+        "series_name": {
+            "show": true,
+            "position": "top_center",
+            "font": "Arial",
+            "font_size": 10,
+            "color": [
+                0,
+                0,
+                0
+            ],
+            "series_bordered": {
                 "show": true,
                 "style": "fine_line",
                 "thickness": 1,
                 "color": [
-                    0.0,
-                    0.0,
-                    0.0
-                ]
-            },
-            "series_name": {
-                "show": true,
-                "position": "top_center",
-                "font": "Arial",
-                "font_size": 10,
-                "color": [
-                    0.0,
-                    0.0,
-                    0.0
+                    0,
+                    0,
+                    0
                 ]
             }
         }
@@ -101,27 +101,26 @@
             "style": "fine_line",
             "thickness": 1,
             "color": [
-                0.0,
-                0.0,
-                1.0
+                0,
+                0,
+                0
             ]
         },
-        "arrange by": "year",
         "stamp_container_pattern": {
             "show": true,
             "pattern": "grid",
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "stamp_container_background": {
             "show": true,
             "color": [
-                0.0,
-                0.502,
-                1.0
+                255,
+                255,
+                255
             ]
         },
         "stamp_border": {
@@ -129,9 +128,9 @@
             "style": "fine_line",
             "thickness": 1,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "stamp_name": {
@@ -140,9 +139,9 @@
             "font": "Arial",
             "font_size": 8,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "stamp_number": {
@@ -151,9 +150,9 @@
             "font": "Arial",
             "font_size": 8,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "stamp_date": {
@@ -162,9 +161,9 @@
             "font": "Arial",
             "font_size": 8,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "stamp_description": {
@@ -173,9 +172,9 @@
             "font": "Arial",
             "font_size": 8,
             "color": [
-                0.0,
-                0.0,
-                0.0
+                0,
+                0,
+                0
             ]
         },
         "stamp_image": {
