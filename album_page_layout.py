@@ -29,12 +29,12 @@ class JsonEditorApp(tk.Tk):
             "style": ["thick_fine_line", "fine_line"],
             "show": ["true", "false"],
             "position": ["top_left", "top_center", "top_right"],
-            "pg_num_position": ["bottom_left", "bottom_center", "bottom_right"],
+            "pg_num_pos": ["bottom_center", "bottom_right"],
             "page_orientation": ["protrait", "landscape"],
             "font": ["Arial", "Default"],
-            "horizontal_alignment": ["left", "center", "right", "uniform"],
-            "vertical_alignment": ["top", "center", "bottom", "uniform"],
-            "arrange by": ["year", "face value","catalog_ord"]
+            "horiz_algmnt": ["left", "center", "right", "uniform"],
+            "vert_algmnt": ["top", "center", "bottom", "uniform"],
+            "arrange": ["year_up","year_down","value_up","value_down","catlg_up", None]
         }
         self.create_widgets()
 
@@ -42,7 +42,7 @@ class JsonEditorApp(tk.Tk):
         self.tree = ttk.Treeview(self,columns=("value",), show="tree headings")
         self.tree.pack(expand=True, fill=tk.BOTH)
         self.tree.heading("#0", text="Key")
-        self.tree.heading("value", text="Value")
+        self.tree.heading("value", text="Value...double click")
         self.tree.column("value", stretch=tk.YES)
 
         self.populate_tree("", self.data)
@@ -83,8 +83,11 @@ class JsonEditorApp(tk.Tk):
         key = self.tree.item(item, "text")
         value = self.tree.item(item, "values")[0] if self.tree.item(item, "values") else ""
 
-        if key in self.radio_buttons:
-            self.show_radio_buttons(item, key, value)
+        if key == "font":
+            # Open the font selection window
+            self.show_font_selection(item, key_path, key, value)
+        elif key in self.radio_buttons:
+            self.show_radio_buttons(item, key_path, key, value)
         else:
             new_value = self.prompt_for_value(key, value)
             if new_value is not None:
@@ -94,10 +97,10 @@ class JsonEditorApp(tk.Tk):
                     self.entry_widgets[item].insert(0, new_value)
                 self.update_data(self.data, key_path, new_value)
             
-    def show_radio_buttons(self, item, key, value):
+    def show_radio_buttons(self, item, key_path, key, value):  ##
         options = self.radio_buttons.get(key, [])
         if not options:
-            print(f"No radio button options found for key: {key}")
+            print(f"No radio button options found for key: {key}")    ##
             return
 
         var = tk.StringVar(value=value)
@@ -116,7 +119,7 @@ class JsonEditorApp(tk.Tk):
         # Add radio buttons to the frame
         for option in options:
             rb = tk.Radiobutton(frame, text=option, variable=var, value=option,
-                                command=lambda: self.update_radio_value(item, key, var.get(), frame))
+                                command=lambda: self.update_radio_value(item, key_path, var.get(), frame)) ##
             rb.pack(side=tk.LEFT)
 
         # Set focus to the frame
@@ -133,9 +136,9 @@ class JsonEditorApp(tk.Tk):
         frame.bind("<Enter>", lambda event: print("Cursor entered the frame"))
         frame.bind("<Leave>", close_frame)
         
-    def update_radio_value(self, item, key, new_value, frame):
+    def update_radio_value(self, item, key_path, new_value, frame):   ##
         self.tree.item(item, values=(new_value,))
-        self.update_data(self.data, key, new_value)
+        self.update_data(self.data, key_path, new_value)     ##
         frame.destroy()
 
     def prompt_for_value(self, key, value):
@@ -154,8 +157,82 @@ class JsonEditorApp(tk.Tk):
         else:
             # Use simpledialog for non-color inputs
             new_value = simpledialog.askstring("Input", f"Enter value for {key}:", initialvalue=value, parent=self)
-            return new_value
+            return float(new_value)
 
+    import tkinter.font as tkFont
+
+    def show_font_selection(self, item, key_path, key, value):
+        # List of fonts supported by PyMuPDF
+        supported_fonts = [
+            "Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique",
+            "Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique",
+            "Times-Roman", "Times-Bold", "Times-Italic", "Times-BoldItalic",
+            "Symbol", "ZapfDingbats"
+        ]
+
+        # Create a new Toplevel window for font selection
+        font_window = tk.Toplevel(self)
+        font_window.title("Select Font")
+        font_window.geometry("400x400")
+
+        # Calculate the position to center the font window inside the main window
+        main_x = self.winfo_x()
+        main_y = self.winfo_y()
+        main_width = self.winfo_width()
+        main_height = self.winfo_height()
+
+        font_window_width = 400
+        font_window_height = 400
+
+        # Center the font window inside the main window
+        x = main_x + (main_width - font_window_width) // 2
+        y = main_y + (main_height - font_window_height) // 2
+        font_window.geometry(f"{font_window_width}x{font_window_height}+{x}+{y}")
+
+        # Create a frame for the Treeview
+        tree_frame = tk.Frame(font_window)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Create a Treeview to display fonts and samples
+        tree = ttk.Treeview(tree_frame, columns=("Font Name", "Sample"), show="headings", height=15)
+        tree.heading("Font Name", text="Font Name")
+        tree.heading("Sample", text="Sample")
+        tree.column("Font Name", width=200, anchor=tk.W)
+        tree.column("Sample", width=180, anchor=tk.W)
+        tree.pack(fill=tk.BOTH, expand=True)
+
+        # Populate the Treeview with supported fonts and samples
+        sample_text = "AaBbCc123"
+        for font in supported_fonts:
+            tree.insert("", tk.END, values=(font, sample_text), tags=(font,))
+
+        # Apply the font to the sample text in the second column
+        for font in supported_fonts:
+            tree.tag_configure(font, font=(font, 12))  # Set the font for the sample text
+
+        # Create a frame for the button
+        button_frame = tk.Frame(font_window)
+        button_frame.pack(fill=tk.X, padx=10, pady=10)
+
+        # Function to handle font selection
+        def select_font():
+            selected_item = tree.selection()
+            if selected_item:
+                selected_font = tree.item(selected_item, "values")[0]
+                # Update the Treeview and JSON data
+                self.tree.item(item, values=(selected_font,))
+                self.update_data(self.data, key_path, selected_font)
+                font_window.destroy()
+
+        # Button to confirm font selection
+        select_button = tk.Button(button_frame, text="Select", command=select_font)
+        select_button.pack()
+
+        # Close the window when the user clicks outside or presses the close button
+        font_window.transient(self)
+        font_window.grab_set()
+        font_window.focus_set()
+        
     def update_data(self, data, key_path, new_value):
         keys = key_path.split(".")  # Split the key path into individual keys
         current_key = keys[0]

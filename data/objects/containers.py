@@ -314,9 +314,9 @@ class Border(Container):
         relative_coordinates = (parent.margin.left, parent.margin.top)
         
         border_options = BorderOptions(
-            style=BorderOptions.Style(config.page_borders["style"]),
-            color=tuple(config.page_borders["color"]),
-            thickness=config.page_borders["thickness"]
+            style=BorderOptions.Style(config.page_opt_page_borders_style),
+            color=tuple(config.page_opt_page_borders_color),
+            thickness=config.page_opt_page_borders_thickness
         )
         
         border = Border(border_options=border_options, width=width, height=height, relative_coordinates=relative_coordinates)
@@ -365,17 +365,17 @@ class WorkingArea(ContainerWithRows):
         relative_coordinates = (parent.margin.left, parent.margin.top)
         alignment_options = AligmentOptions(
             gaps=Gaps(
-                vertical=config.cont_vert_pad,
-                horizontal=config.cont_horiz_pad
+                vertical=config.work_area_container_settings_vert_paddings,
+                horizontal=config.work_area_container_settings_horiz_paddings
             ),
-            horizontal=AligmentOptions.Horizontal(config.cont_horiz_algmt),
-            vertical=AligmentOptions.Vertical(config.cont_vert_algmt),
+            horizontal=AligmentOptions.Horizontal(config.work_area_container_settings_horiz_algmnt),
+            vertical=AligmentOptions.Vertical(config.work_area_container_settings_vert_algmnt),
         )
         margin = Margin(
-            left=config.working_margins["left"],
-            right=config.working_margins["right"],
-            top=config.working_margins["top"],
-            bottom=config.working_margins["bottom"]
+            left=config.work_area_margins_left,
+            right=config.work_area_margins_right,
+            top=config.work_area_margins_top,
+            bottom=config.work_area_margins_bottom
         )
         
         working_area = WorkingArea(
@@ -419,13 +419,14 @@ class Page(Container):
     @staticmethod
     def create_from_config(config: AlbumPages) -> 'Page':
         """Creates a page from the given config."""
+
         width = config.paper_sizes["width"]
         height = config.paper_sizes["height"]
         margin = Margin(
-            left=config.page_margins["left"],
-            right=config.page_margins["right"],
-            top=config.page_margins["top"],
-            bottom=config.page_margins["bottom"]
+            left=config.page_opt_page_margins_left,
+            right=config.page_opt_page_margins_right,
+            top=config.page_opt_page_margins_top,
+            bottom=config.page_opt_page_margins_bottom
         )
         
         page = Page(width=width, height=height, margin=margin)

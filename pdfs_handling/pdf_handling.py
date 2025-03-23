@@ -18,38 +18,24 @@ def create_pdf_from_pages(pages: list[Page]) -> fitz.Document:
         
 def album_pages_design(pdf_document, config) -> None:  #___ TMP  
    
-    doc= fitz.open(pdf_document)
+    # Page number
+    if config.page_opt_page_num_show:
+        for _page_num in range(pdf_document.page_count):
+            page = pdf_document[_page_num]
+            x1, y1, x2, y2 = page.rect
+            num_pgs = pdf_document.page_count
+            text= f"  Page: {_page_num + 1} of  {num_pgs} "
+            if config.page_opt_page_num_pg_num_pos == "bottom_center":
+                x_pos= (x2-len(text)*4)/2
+            elif config.page_opt_page_num_pg_num_pos == "bottom_right":
+                x_pos= (x2 - 1.5* len(text)*4)                   
+            fontname= config.page_opt_page_num_font
+            fontsize= config.page_opt_page_num_font_size
+            color= config.page_opt_page_num_color
+            y_pos= y2 - config.page_opt_page_margins_bottom *72   
+            rect=fitz.Rect(x_pos, y_pos-fontsize, x_pos+len(text)*4, y_pos+16)
+            page.draw_rect(rect, color=(1,1,1), fill=(1,1,1))             
+            page.insert_text((x_pos,y_pos), text, fontname= fontname, fontsize= fontsize, color= color)    
 
-    
-    # Add Page number
-    for _page_num in range(doc.page_count):
-        page = doc[_page_num]
-        x1, y1, x2, y2 = page.rect
-        num_pgs = doc.page_count
-        pg_text= f"_ Pg: {_page_num+1} / {num_pgs} _"
-        x_pos= (x2-x1-len(pg_text))/2                     # pos. al medio de la pagina
-        point= fitz.Point(x_pos,y1-18)
-        page.insert_text(point, pg_text, fontsize=8, color=(0,0,1))    
+    return 
 
-    return doc
-
-
-""" # Add Series name
-        series_name = content_options["output_options"]["file_name"]
-        x_pos= (x1- len(series_name))/2
-        point= fitz.Point(x_pos,y1-30)
-        page.insert_text(point, series_name, fontsize=10, color=(0,0,1))
-        """
-
-"""  
-______________________________________________________________________________
-
-
-        * (1, 1, 0): Amarillo
-        * (1, 0, 1): Magenta
-        * (0, 1, 1): Cian
-
-
-    Además del modelo RGB, PyMuPDF soporta otros modelos de color: como CMYK y Gray.
-
-"""

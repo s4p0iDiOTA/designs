@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 from data.common import formato_pdf
+import json
 
 class Stamp:
     def __init__(self, data: Dict[str, Any] = None) -> None:
@@ -48,6 +49,40 @@ class Series:
 
 
 class AlbumPages:
+    def __init__(self, config_file):      
+        # Dynamically create attributes for each key in the JSON
+        # ..nested keys are converted to attrib with : "_"
+        self._initialize_attributes(config_file)
+        self.paper_sizes = formato_pdf[config_file["page_opt"]["paper_type"]]
+
+    def _initialize_attributes(self, data, parent_key=""):
+
+        for key, value in data.items():
+            # Create a full key path for nested attributes
+            full_key = f"{parent_key}.{key}" if parent_key else key
+
+            if isinstance(value, dict):
+                # Recursively handle nested dictionaries
+                self._initialize_attributes(value, full_key)
+            else:
+                # Assign the value to an attribute
+                attribute_name = full_key.replace(".", "_")  # Replace dots with underscores for valid attribute names
+                setattr(self, attribute_name, value)
+
+    def __repr__(self):
+        attributes = vars(self)
+        return "\n".join(f"{key}: {value}" for key, value in attributes.items())
+    
+
+
+
+
+
+
+
+
+"""
+class AlbumPages:
     default_config_file=[]
     def __init__(self, config_file: str = None):
         if config_file:
@@ -76,5 +111,6 @@ class AlbumPages:
         self.stamp_padding = config_file["stamps_settings"]["stamp_padding"]
         self.stamps_horiz_alignment = config_file["stamps_settings"]["horizontal_alignment"]
         self.stamps_vert_alignment = config_file["stamps_settings"]["vertical_alignment"]
+        self.arrangement_by = config_file["stamps_settings"]["arrangement_by"]
 
-    
+"""

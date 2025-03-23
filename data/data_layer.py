@@ -35,6 +35,34 @@ def get_series(content_options: dict) -> List[Series]:
     return series_list
 
 
+def arrange_series(series, criterio):
+    
+    def compare(stamp):
+        values = []
+        orden = criterio.split("_")
+        attribute = orden[0]
+        direction = orden[1]
+        if attribute == "year":
+            value = stamp[4]              # ver
+        elif attribute == "face_val":
+            value = stamp[5]
+        elif attribute == "catalog_num":
+            value = stamp[6]
+            
+        if direction == "down":
+            values.append(-value)
+        else:
+            values.append(value)
+
+        return values
+
+    #for stamp in series.stamps:
+    series_list= series.stamps
+    series_list.sort(key=compare) 
+
+    return series_list
+
+
 def read_json(file_name: str, directory_path: str = ""): # current dir by default
     # Reads a JSON file from the specified file path and returns its contents as a Python variable.
     # file_path: The path to the JSON file. 
@@ -107,3 +135,4 @@ class TestReadJson(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    

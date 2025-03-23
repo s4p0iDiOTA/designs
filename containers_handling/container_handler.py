@@ -1,5 +1,5 @@
 import os
-from data.data_layer import validate_json_file, read_json, get_series
+from data.data_layer import validate_json_file, read_json, get_series, arrange_series
 from data.models import AlbumPages
 from data.objects.containers import Page, Row, SeriesContainer
 from data.objects.options import AligmentOptions, Gaps
@@ -88,21 +88,22 @@ def generate_album_pages():
 
     # Create an AlbumPages object
     config = AlbumPages(config_file)
-    
+
     # Get stamp series from data source based on the provided content options.  
     series_list = get_series(content_options)
-        
+    #if config.stamps_settings_arrange:
+    #    for series in series_list: arrange_series(series, config.stamps_settings_arrange) 
+         
     # Create a page object from the AlbumPages object and configure the working area 
     page = Page.create_from_config(config)    
     max_width = page.working_area.get_effective_width()
     max_height = page.working_area.get_effective_height()
-    gaps = Gaps(vertical=config.cont_vert_pad, horizontal=config.cont_horiz_pad)
-    algmnt_opts = AligmentOptions(gaps=gaps, horizontal=config.cont_horiz_algmt, vertical=config.cont_vert_algmt)
-
+    gaps = Gaps( horizontal=config.work_area_container_settings_horiz_paddings, vertical=config.work_area_container_settings_vert_paddings)
+    algmnt_opts = AligmentOptions(gaps=gaps, horizontal= config.work_area_container_settings_horiz_algmnt, vertical=config.work_area_container_settings_vert_algmnt)
+ 
     ##series__containers = [SeriesContainer.create(series=series, max_width=max_width, max_height=max_height, alignment_options=algmnt_opts) for series in series_list]
     # ver si se logra incluir la llamada a split_container desde: SeriesContainer.. create() line 563.. (si sí eliminar max_height de la llamadaa create)
-    # si no:
-     
+    # si no: 
     # create series containers and split them if they don't fit in the working area: 
     series__containers = []
     for series in series_list:
@@ -121,7 +122,7 @@ def generate_album_pages():
     pdf_document = create_pdf_from_pages(pages)
 
     # Add page number.. etc ... TMP
-    album = album_pages_design(pdf_document, config)  #___ TMP
+    album_pages_design(pdf_document, config)  #___ TMP
 
     #save the pdf document
     output_file_name = content_options["output_options"]["file_name"]
@@ -131,8 +132,8 @@ def generate_album_pages():
     except FileExistsError:
         pass
     pdf_document_path = os.path.join(output_file_path, output_file_name)
-    album.save(pdf_document_path)
-    album.close()
+    pdf_document.save(pdf_document_path)
+    pdf_document.close()
 
 
 
