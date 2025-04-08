@@ -12,12 +12,12 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
     # the working area. When the containers fills up the area corresponding to a work area,
     # their start coordinates are adjusted to the start of the working area. 
 
-    pages = []
+    pages: list[Page] = []
     page = Page.create_from_config(config)
     
     row_alignment_options = AligmentOptions(
         gaps=page.working_area.alignment_options.gaps,
-        horizontal=AligmentOptions.Horizontal.UNIFORM,
+        horizontal=AligmentOptions.Horizontal.CENTER,
         vertical=AligmentOptions.Vertical.BOTTOM)
     
     row = Row(alignment_options=row_alignment_options, 
@@ -60,10 +60,12 @@ def distribute_containers(series__containers: list[SeriesContainer], config: Alb
     # Aligment of rows with series_containers (columns) inside the pages
     for page in pages:
         for row in page.working_area.rows:
-            row.vertical_align()                    # vertical align the row with more than one container 
-            row.horizontal_align()                  # horizontal align the containers in the row 
+            row.align()
+            #row.vertical_align()                    # vertical align the row with more than one container 
+            #row.horizontal_align()                  # horizontal align the containers in the row 
       # page.working_area.horizontal_align()        # horizontal align the rows-containers in the pages   (?)      
-        page.working_area.vertical_align()          # vertical align the rows-containers in the pages 
+      # page.working_area.vertical_align()          # vertical align the rows-containers in the pages     
+        page.working_area.align()          # vertical align the rows-containers in the pages 
 
     return pages
 

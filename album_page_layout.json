@@ -1,6 +1,6 @@
 {
     "page_opt": {
-        "paper_type": "A4",
+        "paper_type": "letter",
         "page_margins": {
             "left": 0.3,
             "right": 0.25,
@@ -99,8 +99,8 @@
     },
     "stamps_settings": {
         "stamp_padding": 0.5,
-        "horiz_algmnt": "justify",
-        "vert_algmnt": "bottom",
+        "horiz_algmnt": "uniform",
+        "vert_algmnt": "center",
         "arrange": "",
         "stamp_container_border": {
             "show": true,

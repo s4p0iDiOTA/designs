@@ -141,8 +141,8 @@ class Row(Container):
     def horizontal_align(self) -> None:
         """Aligns the items horizontally based on the given alignment options."""
         if self.alignment_options.horizontal == AligmentOptions.Horizontal.UNIFORM:
-            gap=(self.get_width() - sum(item.get_width() for item in self.items)) / (len(self.items) + 1)
-            current_x = gap
+            gap = (self.get_width() - sum(item.get_width() for item in self.items)) / (len(self.items) - 1) if len(self.items) > 1 else 0
+            current_x = 0 if gap > 0 else (self.get_width() - sum(item.get_width() for item in self.items)) / 2
             for item in self.items:
                 item.set_x(current_x)
                 current_x += item.get_width() + gap
@@ -284,6 +284,7 @@ class ContainerWithRows(Container):
         
         for row in self.rows:
             row.render(pdf_page, new_origin)
+
 
 class Border(Container):
     def __init__(self, border_options: BorderOptions, width: float, height: float, relative_coordinates: tuple) -> None:
